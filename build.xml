@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="BroadcastViewer" default="build" basedir=".">
+
+  	<property file="build.properties"/>
+  	<property name="projectname" value="BroadcastViewer" />
+  	<property name="entrypoint" value="ob.BroadcastViewer" />
+  	<property name="entrypoint.html" value="BroadcastViewer.html" />
+	<property name="WEB-INF" value="war/WEB-INF" />
+	<property name="classes.dir" value="${WEB-INF}/classes" />
+	<property name="lib.dir" value="${WEB-INF}/lib" />	
+	<property name="build.dir" value="build" />
+
+	<target name="mkdirs">
+		<mkdir dir="${build.dir}" />
+    	<mkdir dir="${lib.dir}" />
+	</target>
+
+	<target name="probe-proxy">
+		<condition property="proxy.enabled">
+		 	<and>
+				<isset property="proxy.host"/>
+				<!--isreachable host="${proxy.host}"/-->
+		  	</and>
+		</condition>
+	</target>
+
+	<target name="proxy" depends="probe-proxy" if="proxy.enabled">
+		<setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}" />
+	</target>
+
+  	<property name="gwt.args" value="" />
+
+	<path id="project.class.path">
+    	<pathelement location="${classes.dir}"/>
+    	<pathelement location="${gwtsdk.dir}/gwt-user.jar"/>
+    	<fileset dir="${gwtsdk.dir}" includes="gwt-dev*.jar"/>
+    	<fileset dir="${lib.dir}" includes="**/*.jar"/>
+ 	</path>
+
+	<path id="tools.class.path">
+    	<path refid="project.class.path" />
+    	<pathelement 
+			location="${appenginesdk.dir}/lib/appengine-tools-api.jar"/>
+    	<fileset dir="${appenginesdk.dir}/lib/tools">
+      		<include name="**/asm-*.jar"/>
+      		<include name="**/datanucleus-enhancer-*.jar"/>
+    	</fileset>
+	</path>
+
+	<path id="gwt.class.path">
+		<pathelement location="${gwtsdk.dir}/validation-api-1.0.0.GA.jar" />
+	    <pathelement location="${gwtsdk.dir}/validation-api-1.0.0.GA-sources.jar" />
+	</path>
+
+
+  	<target name="libs" depends="mkdirs" description="Copy libs to WEB-INF/lib">
+    	<copy todir="${lib.dir}" file="${gwtsdk.dir}/gwt-servlet.jar" />
+    	<copy todir="${lib.dir}" 
+			  file="${gwtsdk.dir}/gwt-servlet-deps.jar" />
+	   	<copy todir="${lib.dir}" flatten="true">
+	    	<fileset dir="${appenginesdk.dir}/lib/user" includes="**/*.jar"/>
+		</copy>
+  	</target>
+
+	<target name="compile" depends="mkdirs,proxy,libs" 
+  		    description="Compile java source to bytecode">
+    	<mkdir dir="${classes.dir}"/>
+    	<javac srcdir="src" includes="**" encoding="utf-8"
+        	   destdir="${classes.dir}"
+        	   source="1.5" target="1.5" nowarn="true"
+	           debug="true" debuglevel="lines,vars,source">
+
+      		<classpath refid="project.class.path"/>
+    	</javac>
+    	<copy todir="${classes.dir}">
+      		<fileset dir="src" excludes="**/*.java"/>
+    	</copy>
+		
+		<taskdef name="datanucleusenhancer" classpathref="tools.class.path"
+		         classname="org.datanucleus.enhancer.tools.EnhancerTask" />
+	    <datanucleusenhancer classpathref="tools.class.path" failonerror="true">
+	      	<fileset dir="${classes.dir}" includes="**/*.class" />
+    	</datanucleusenhancer>
+
+  	</target>
+
+  	<target name="gwtc" depends="compile" 
+			description="GWT compile to JavaScript (production mode)">
+
+	    <java failonerror="true" fork="true" 
+			  classname="com.google.gwt.dev.Compiler">
+      	
+			<classpath>
+		        <pathelement location="src"/>
+		        <path refid="project.class.path"/>
+				<path refid="tools.class.path"/>
+				<path refid="gwt.class.path" />
+			</classpath>
+		    <!-- add jvmarg -Xss16M or similar if you see a 
+				StackOverflowError -->
+		    <jvmarg value="-Xmx256M"/>
+		    <arg line="-war"/>
+		    <arg value="war"/>
+		    <arg line="${gwt.args}"/>
+		    <arg value="${entrypoint}"/>
+	    </java>
+	</target>
+
+  	<target name="devmode" depends="compile" description="Run development mode">
+    	<java failonerror="true" fork="true" 
+			  classname="com.google.gwt.dev.DevMode">
+
+      		<classpath>
+        		<pathelement location="src"/>
+        		<path refid="project.class.path"/>
+				<path refid="gwt.class.path" />
+				<path refid="tools.class.path"/>				
+      		</classpath>
+      		<jvmarg value="-Xmx256M"/>
+      		<arg value="-startupUrl"/>
+		    <arg value="${entrypoint.html}"/>
+		    <arg line="-war"/>
+		    <arg value="war"/>
+		    <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+		    <arg line="${gwt.args}"/>
+		    <arg value="${entrypoint}"/>
+			<jvmarg line="-javaagent:${appenginesdk.dir}/lib/agent/appengine-agent.jar" />
+			<arg value="-server"/>
+		    <arg value="com.google.appengine.tools.development.gwt.AppEngineLauncher"/>
+	        <arg value="${entrypoint}"/>
+
+		</java>
+	</target>
+
+	<target name="build" depends="gwtc" description="Build this project" />
+
+	<target name="war" depends="build" description="Create a war file">
+    	<zip destfile="${build.dir}/${projectname}.war" basedir="war"/>
+  	</target>
+
+	<target name="deploy" depends="proxy,war" description="Deploy to GAE">
+  		<exec executable="${appenginesdk.dir}/bin/appcfg.sh">
+			<arg value="update" />
+			<arg value="war" />
+		</exec>
+	</target>
+
+  	<target name="clean" description="Cleans this project">
+    	<delete dir="${classes.dir}" failonerror="false" />
+    	<delete dir="war/broadcastviewer" failonerror="false" />
+  	</target>
+
+	<target name="clean-db" description="Cleans this project's DB">
+    	<delete dir="${WEB-INF}/appengine-generated" failonerror="false" />
+ 	</target>
+
+  	<target name="clean-all" depends="clean,clean-db" 
+			description="Cleans everything">
+		<delete dir="${WEB-INF}/deploy" failonerror="false" />
+		<delete file="${build.dir}/${projectname}.war" />
+  	</target>
+
+</project>
