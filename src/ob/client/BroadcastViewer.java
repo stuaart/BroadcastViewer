@@ -4,6 +4,10 @@ import ob.shared.FieldVerifier;
 import ob.client.overlay.bambuser.Video;
 import ob.client.overlay.bambuser.Result;
 import ob.client.model.Broadcaster;
+import ob.client.overlay.JSONRequest;
+import ob.client.overlay.JSONRequestHandler;
+
+import com.google.gwt.core.client.JavaScriptObject;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -238,14 +242,15 @@ public class BroadcastViewer implements EntryPoint
 			typeStr = "&type=live";
 
 		String url = API_URL + "&limit=1&username=" + b.getBroadcastId() 
-				     + typeStr;
+				     + typeStr + "&callback=";
 
 		url = URL.encode(url);
  
 		GWT.log("Requesting URL: " + url);
-
+/*
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
-  
+  		builder.setTimeoutMillis(2000);
+
 		try 
 		{
     		final Request request = 
@@ -292,26 +297,59 @@ public class BroadcastViewer implements EntryPoint
 		{
 			Window.alert("Couldn't retrieve JSON");         
 		}
+*/
 
-		//final String vars = "vid=" + "" + "&chat=no";
-		final String vars = "username=" + b.getBroadcastId() + "&chat=no";
-		final String html = 
-			"<object id=\"bplayer\" "
-		 	+ "classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" "
-			+ "width=\"320\" height=\"276\"><embed name=\"bplayer\" "
-			+ "src=\"http://static.bambuser.com/r/player.swf\" "
-			+ "type=\"application/x-shockwave-flash\" flashvars=\"" 
-			+ vars + 
-			"\" width=\"320\" height=\"276\" allowfullscreen=\"true\" "
-			+ "allowscriptaccess=\"always\" wmode=\"opaque\"></embed>"
-			+ "<param name=\"movie\" "
-			+ "value=\"http://static.bambuser.com/r/player.swf\"></param>"
-			+ "<param name=\"flashvars\" value=\""
-			+ vars + 
-			"\"></param><param name=\"allowfullscreen\" value=\"true\">"
-			+ "</param><param name=\"allowscriptaccess\" value=\"always\">"
-			+"</param><param name=\"wmode\" value=\"opaque\"></param></object>";
-		broadcastPanel.setWidget(new HTML(html));
-	}
+		JSONRequest.get(url, new JSONRequestHandler() 
+		{
+			@Override
+			public void onRequestComplete(JavaScriptObject json)
+			{
+				final Result result = (Result)json;//Result.parse(json);
+
+				// Should only get one result if URL request set to live only
+				Video vid = null;
+				for (Video v : result.getVideos())
+				{
+					vid = v;
+					break;
+				}
+
+				if (vid != null)
+				{
+					GWT.log("Getting video, id=" + vid.getVid() 
+							+ ", username=" + vid.getUsername());
+					final HTML embed = 
+						createBambuserEmbed("vid=" + vid.getVid() + "&chat=no");
+					broadcastPanel.setWidget(embed);
+				}
+				else
+					Window.alert("Error loading live video for Broadcaster");
+
+			}
+		});
+
+		}
+
+		private final HTML createBambuserEmbed(final String vars)
+		{
+			return new HTML(
+				"<object id=\"bplayer\" "
+			 	+ "classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" "
+				+ "width=\"320\" height=\"276\"><embed name=\"bplayer\" "
+				+ "src=\"http://static.bambuser.com/r/player.swf\" "
+				+ "type=\"application/x-shockwave-flash\" flashvars=\"" 
+				+ vars + 
+				"\" width=\"320\" height=\"276\" allowfullscreen=\"true\" "
+				+ "allowscriptaccess=\"always\" wmode=\"opaque\"></embed>"
+				+ "<param name=\"movie\" "
+				+ "value=\"http://static.bambuser.com/r/player.swf\"></param>"
+				+ "<param name=\"flashvars\" value=\""
+				+ vars + 
+				"\"></param><param name=\"allowfullscreen\" value=\"true\">"
+				+ "</param><param name=\"allowscriptaccess\" value=\"always\">"
+				+"</param><param name=\"wmode\" value=\"opaque\"></param>"
+				+ "</object>"
+			);
+		}
 
 }

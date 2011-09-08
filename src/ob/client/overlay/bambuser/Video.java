@@ -13,7 +13,7 @@ public class Video extends JavaScriptObject
 
 	public final native int getVid()
 	/*-{ 
-    	return this.vid;
+    	return parseInt(this.vid);
     }-*/;
 	
 	public final native String getTitle()
@@ -33,7 +33,7 @@ public class Video extends JavaScriptObject
 
 	public final native int getCreated()
 	/*-{ 
-    	return this.created;
+    	return parseInt(this.created);
     }-*/;
 
 	public final native String getPreview()
@@ -48,12 +48,12 @@ public class Video extends JavaScriptObject
 
 	public final native int getWidth()
 	/*-{ 
-    	return this.width;
+    	return parseInt(this.width);
     }-*/;
 
 	public final native int getHeight()
 	/*-{ 
-    	return this.height;
+    	return parseInt(this.height);
     }-*/;
 
 	public final native String getLat()
@@ -68,7 +68,7 @@ public class Video extends JavaScriptObject
 
 	public final native float getPositionAccuracy()
 	/*-{ 
-    	return this.position_accuracy;
+    	return parseFloat(this.position_accuracy);
     }-*/;
 
 	public final native String getPositionType()
@@ -83,17 +83,17 @@ public class Video extends JavaScriptObject
 
 	public final native int getViewsLive()
 	/*-{ 
-    	return this.views_live;
+    	return parseInt(this.views_live);
     }-*/;
 
 	public final native int getViewsTotal()
 	/*-{ 
-    	return this.views_total;
+    	return parseInt(this.views_total);
     }-*/;
 
 	public final native int getCommentCount()
 	/*-{ 
-    	return this.comment_count;
+    	return parseInt(this.comment_count);
     }-*/;
 
 	public final native String getDeviceClass()
