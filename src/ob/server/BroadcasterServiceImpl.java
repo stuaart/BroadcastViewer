@@ -1,7 +1,7 @@
 package ob.server;
 
 import ob.client.BroadcasterService;
-import ob.model.Broadcaster;
+import ob.client.model.Broadcaster;
 import ob.shared.FieldVerifier;
 
 import com.google.gwt.core.client.GWT;
@@ -17,10 +17,10 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 							        implements BroadcasterService 
 {
 
-	public ob.client.Broadcaster[] getBroadcasters() 
+	public Broadcaster[] getBroadcasters() 
 		throws IllegalArgumentException 
 	{
-		List<ob.client.Broadcaster> bs = new ArrayList<ob.client.Broadcaster>();
+		List<Broadcaster> bs = new ArrayList<Broadcaster>();
 
 		final EntityManager em = EMFSingleton.getEntityManager();
 		System.out.println("Getting Broadcasters from DB");
@@ -28,13 +28,15 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		{
 			final Query q = 
 				em.createQuery("SELECT FROM " 
-								+ Broadcaster.class.getName());
-			final List<Broadcaster> bl = q.getResultList();
-			for (final Broadcaster b : bl)
+								+ ob.model.Broadcaster.class.getName());
+			final List<ob.model.Broadcaster> bl = q.getResultList();
+			for (final ob.model.Broadcaster b : bl)
 			{
-				bs.add(new ob.client.Broadcaster(b.getLatLng(), 
-												 b.getOrientation(), 
-												 b.getTimestamp())
+				bs.add(new Broadcaster(b.getKey().getId(),
+									   b.getBroadcastId(),
+									   b.getLatLng(), 
+									   b.getOrientation(), 
+									   b.getTimestamp())
 				);
 				System.out.println("Got Broadcaster, key=" + b.getKey() 
 								   + ", latlng=" + b.getLatLng()[0]);
@@ -49,7 +51,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 			em.close();
 		}
 
-		return bs.toArray(new ob.client.Broadcaster[0]);
+		return bs.toArray(new Broadcaster[0]);
  	}
 
 	public String addBroadcasters() throws IllegalArgumentException
@@ -58,11 +60,12 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		System.out.println("Making some random Broadcasters");
 		try
 		{
-			for (int i = 0; i < 10; ++i)
+			for (int i = 0; i < 1; ++i)
 			{
-				final Broadcaster b = new Broadcaster();
-				b.setLatLng(new float[]{(float)(Math.random() * 50.0), 
-										(float)(Math.random() * 50.0)});
+				final ob.model.Broadcaster b = new ob.model.Broadcaster();
+				b.setBroadcastId("stuaart");
+				b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 53.00), 
+										(float)(Math.random() + 1.0)});
 				b.setOrientation(new float[]{(float)Math.random(), 
 											 (float)Math.random(), 
 											 (float)Math.random()});

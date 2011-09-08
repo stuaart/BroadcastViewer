@@ -3,6 +3,16 @@ BroadcastViewer
 
 A viewer webapp for Outside Broadcast.
 
+Depends upon a build.properties file, with the following property definitions:
+
+	gwtsdk.dir = /path/to/gwt
+	appenginesdk.dir = /path/to/appengine
+
+and the following option definitions (exclude for no proxy):
+
+	proxy.host = <proxy host>
+	proxy.port = <proxy port>
+
 
 Stuart Reeves
 Horizon Digital Economy Research

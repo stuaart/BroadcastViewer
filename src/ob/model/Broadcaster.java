@@ -21,6 +21,9 @@ public class Broadcaster
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Key key;
 
+	// Identifier for this Broadcaster's <video service> id
+	private String broadcastId;
+
 	private float latlng[];
 
 	private float orien[];
@@ -42,14 +45,20 @@ public class Broadcaster
 		this.timestamp = timestamp;
 	}
 
-	public void setKey(final Key key)
-	{
-		this.key = key;
-	}
 
 	public Key getKey()
 	{
 		return key;
+	}
+	
+	public void setBroadcastId(final String broadcastId)
+	{
+		this.broadcastId = broadcastId;
+	}
+
+	public String getBroadcastId()
+	{
+		return broadcastId;
 	}
 
 	public void setLatLng(final float latlng[])
