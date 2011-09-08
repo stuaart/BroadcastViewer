@@ -24,6 +24,9 @@ public class Broadcaster
 	// Identifier for this Broadcaster's <video service> id
 	private String broadcastId;
 
+	// Identifier for this Broadcaster's Jabber id
+	private String jabberId;
+
 	private float latlng[];
 
 	private float orien[];
@@ -36,10 +39,15 @@ public class Broadcaster
 		timestamp = new Date(); // TODO: UTC?
 	}
 
-	public Broadcaster(final float latlng[], final float orien[], 
+	public Broadcaster(final String broadcastId,
+					   final String jabberId,
+					   final float latlng[], 
+					   final float orien[], 
 					   final Date timestamp)
 	{
 		this();
+		this.broadcastId = broadcastId;
+		this.jabberId = jabberId;
 		this.latlng = latlng;
 		this.orien = orien;
 		this.timestamp = timestamp;
@@ -59,6 +67,16 @@ public class Broadcaster
 	public String getBroadcastId()
 	{
 		return broadcastId;
+	}
+
+	public void setJabberId(final String jabberId)
+	{
+		this.jabberId = jabberId;
+	}
+
+	public String getJabberId()
+	{
+		return jabberId;
 	}
 
 	public void setLatLng(final float latlng[])

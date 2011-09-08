@@ -34,6 +34,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 			{
 				bs.add(new Broadcaster(b.getKey().getId(),
 									   b.getBroadcastId(),
+									   b.getJabberId(),
 									   b.getLatLng(), 
 									   b.getOrientation(), 
 									   b.getTimestamp())
@@ -64,7 +65,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 			{
 				final ob.model.Broadcaster b = new ob.model.Broadcaster();
 				b.setBroadcastId("stuaart");
-				b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 53.00), 
+				b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 51.00), 
 										(float)(Math.random() + 1.0)});
 				b.setOrientation(new float[]{(float)Math.random(), 
 											 (float)Math.random(), 

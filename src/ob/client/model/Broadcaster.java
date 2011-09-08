@@ -8,7 +8,11 @@ public class Broadcaster implements IsSerializable
 
 	private long key;
 
-	private String broadcastId;	
+	// Identifier for this Broadcaster's <video service> id
+	private String broadcastId;
+
+	// Identifier for this Broadcaster's Jabber id
+	private String jabberId;
 
 	private float[] latlng;
 
@@ -20,12 +24,14 @@ public class Broadcaster implements IsSerializable
 
 	public Broadcaster(final long key, 
 					   final String broadcastId,
+					   final String jabberId,
 					   final float[] latlng, 
 					   final float[] orien, 
 					   final Date timestamp)
 	{
 		this.key = key;
 		this.broadcastId = broadcastId;
+		this.jabberId = jabberId;
 		this.latlng = latlng;
 		this.orien = orien;
 		this.timestamp = timestamp;

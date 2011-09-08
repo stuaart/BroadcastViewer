@@ -138,7 +138,7 @@
     	<zip destfile="${build.dir}/${projectname}.war" basedir="war"/>
   	</target>
 
-	<target name="deploy" depends="proxy,war" description="Deploy to GAE">
+	<target name="deploy" depends="proxy" description="Deploy to GAE">
   		<exec executable="${appenginesdk.dir}/bin/appcfg.sh">
 			<arg value="update" />
 			<arg value="war" />
