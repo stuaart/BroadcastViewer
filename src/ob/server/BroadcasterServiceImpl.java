@@ -9,6 +9,8 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Timer;
+
 import javax.persistence.Query;
 import javax.persistence.EntityManager;
 
@@ -17,57 +19,11 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 							        implements BroadcasterService 
 {
 
-	public ob.client.model.Broadcaster[] getAllBroadcasters() 
-		throws IllegalArgumentException 
-	{
-		List<ob.client.model.Broadcaster> bs = 
-			new ArrayList<ob.client.model.Broadcaster>();
+	private static Runnable externalPoll = null;
+	private final Timer timer = new Timer();
+    private static final long POLL_INTERVAL = 10000;
 
-		final EntityManager em = EMFSingleton.getEntityManager();
-		System.out.println("Getting all Broadcasters from DB");
-		try
-		{
-			final List<Broadcaster> bl = 
-				em.createQuery("SELECT FROM " 
-								+ Broadcaster.class.getName())
-				  .getResultList();
-
-			em.getTransaction().begin();
-			
-			for (final Broadcaster b : bl)
-			{
-				bs.add(new ob.client.model.Broadcaster(b.getBroadcastId(),
-													   b.getJabberId(),
-													   b.getLatLng(), 
-													   b.getOrientation(), 
-													   b.getTimestamp())
-				);
-				System.out.println("Got Broadcaster, key=" + b.getBroadcastId() 
-								   + ", latlng=" + b.getLatLng()[0]);
-			}
-			em.getTransaction().commit();			
-		}
-		catch (final Throwable t)
-		{
-			System.out.println(t.toString());
-		}
-		finally
-		{
-			if (em.getTransaction().isActive())
-			{
-				em.getTransaction().rollback();
-				System.out.println("Rolling current transaction back");
-			}
-
-		}
-
-		em.close();
-
-		return bs.toArray(new ob.client.model.Broadcaster[0]);
- 	}
-
-	public void deleteBroadcaster(final Broadcaster b)
-		throws IllegalArgumentException 	
+	public static void deleteBroadcaster(final Broadcaster b)
 	{
 		final EntityManager em = EMFSingleton.getEntityManager();
 		System.out.println("Attempting to retrieve & delete Broadcaster");
@@ -95,8 +51,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		em.close();
 	}
 
-	public void updateBroadcaster(final Broadcaster b)
-		throws IllegalArgumentException 	
+	public static void updateBroadcaster(final Broadcaster b)
 	{
 		final EntityManager em = EMFSingleton.getEntityManager();
 		System.out.println("Attempting to retrieve & update Broadcaster");
@@ -163,6 +118,85 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		em.close();
 	}
 
+
+	// Service methods below
+
+	public void startExternalPoll() throws IllegalArgumentException
+	{
+		if (externalPoll == null)
+		{
+			externalPoll = new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					while (true)
+					{
+						try 
+						{
+							Thread.sleep(POLL_INTERVAL);
+						} 
+						catch (final Throwable e) 
+						{
+							System.out.println(e.toString());
+							System.out.println("Extenral poll interrupted");
+						}
+					}
+ 				}
+				
+			};
+			externalPoll.run();
+		}
+	}
+
+	public ob.client.model.Broadcaster[] getAllBroadcasters() 
+		throws IllegalArgumentException 
+	{
+		List<ob.client.model.Broadcaster> bs = 
+			new ArrayList<ob.client.model.Broadcaster>();
+
+		final EntityManager em = EMFSingleton.getEntityManager();
+		System.out.println("Getting all Broadcasters from DB");
+		try
+		{
+			final List<Broadcaster> bl = 
+				em.createQuery("SELECT FROM " 
+								+ Broadcaster.class.getName())
+				  .getResultList();
+
+			em.getTransaction().begin();
+			
+			for (final Broadcaster b : bl)
+			{
+				bs.add(new ob.client.model.Broadcaster(b.getBroadcastId(),
+													   b.getJabberId(),
+													   b.getLatLng(), 
+													   b.getOrientation(), 
+													   b.getTimestamp())
+				);
+				System.out.println("Got Broadcaster, key=" + b.getBroadcastId() 
+								   + ", latlng=" + b.getLatLng()[0]);
+			}
+			em.getTransaction().commit();			
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
+
+		}
+
+		em.close();
+
+		return bs.toArray(new ob.client.model.Broadcaster[0]);
+ 	}
 
 	// TEST METHOD BELOW
 	public void addBroadcasters() throws IllegalArgumentException
