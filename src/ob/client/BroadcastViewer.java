@@ -80,7 +80,7 @@ public class BroadcastViewer implements EntryPoint
 		GWT.create(BroadcasterService.class);
 
 	private final BiMap<Broadcaster, Marker> broadcasters = HashBiMap.create();
-	private final Map<Marker, String> externals = new HashMap<Marker, String>();
+	private final BiMap<Marker, String> externals = HashBiMap.create();
 
 	private MapWidget map = null;
 
@@ -121,7 +121,7 @@ public class BroadcastViewer implements EntryPoint
 			@Override
       		public void onClick(final ClickEvent event) 
 			{
-				getBroadcasters();
+				getAllBroadcasters();
       		}
 	    });
  		getExternals.addClickHandler(new ClickHandler() 
@@ -233,7 +233,7 @@ public class BroadcastViewer implements EntryPoint
 
 	private void populateBroadcasters()
 	{
-		AsyncCallback<String> callback = new AsyncCallback<String>()
+		final AsyncCallback<Void> callback = new AsyncCallback<Void>()
 		{
 			@Override
 			public void onFailure(final Throwable caught) 
@@ -242,18 +242,18 @@ public class BroadcastViewer implements EntryPoint
 			}
 
 			@Override
-			public void onSuccess(final String s) 
+			public void onSuccess(Void v) 
 			{
-				GWT.log("Populated Broadcasters: " + s);
+				GWT.log("Populated Broadcasters");
 			}
 		};
 		bServ.addBroadcasters(callback);
 
 	}
 
-	private void getBroadcasters()
+	private void getAllBroadcasters()
 	{
-    	AsyncCallback<Broadcaster[]> callback = 
+    	final AsyncCallback<Broadcaster[]> callback = 
 			new AsyncCallback<Broadcaster[]>()
 			{
 				@Override
@@ -269,14 +269,27 @@ public class BroadcastViewer implements EntryPoint
 					GWT.log("Getting Broadcasters, size is " + bs.length);
 					for (final Broadcaster b : bs)
 					{
+						final Marker m = broadcasters.get(b);
+						if (m == null)
+						{
+							final Marker m_ = createMarker(
+								LatLng.newInstance(b.getLatLng()[0],
+												   b.getLatLng()[1]),
+								'B'
+							);
+			    			map.addOverlay(m_);
+							broadcasters.put(b, m_);
+							GWT.log("Added marker for Broadcaster, id=" 
+									+ b.getBroadcastId());
+						}
+						else
+						{
+							m.setLatLng(LatLng.newInstance(b.getLatLng()[0],
+														   b.getLatLng()[1]));
+							GWT.log("Updated marker for Broadcaster, id=" 
+									+ b.getBroadcastId());
 
-						final Marker m = createMarker(
-							LatLng.newInstance(b.getLatLng()[0],
-											   b.getLatLng()[1]),
-							'B'
-						);
-			    		map.addOverlay(m);
-						broadcasters.put(b, m);
+						}
 /*					   	final InfoWindow i = map.getInfoWindow();
 						i.open(m,
     					    new InfoWindowContent("TS=" + 
@@ -290,7 +303,7 @@ public class BroadcastViewer implements EntryPoint
    				}
 			};
 
-		bServ.getBroadcasters(callback);
+		bServ.getAllBroadcasters(callback);
 	}
 
 	private void updateExternalBroadcasters(final boolean liveOnly,
@@ -325,18 +338,32 @@ public class BroadcastViewer implements EntryPoint
 
 				for (final Video v : result.getVideos())
 				{
-					GWT.log("Getting video, id=" + v.getVid() 
+					final Marker m = (externals.inverse()).get(v.getUsername());
+					if (m == null)
+					{
+						GWT.log("Getting video, id=" + v.getVid() 
 							+ ", username=" + v.getUsername() + ", latlng=("
 							+ Double.parseDouble(v.getLat()) + ","
 							+ Double.parseDouble(v.getLon()) + ")");
-					final Marker m = createMarker(
+						final Marker m_ = createMarker(
 							LatLng.newInstance(Double.parseDouble(v.getLat()),
 											   Double.parseDouble(v.getLon())),
 							'E'
-					);
-		    		map.addOverlay(m);
-					externals.put(m, v.getUsername());
+						);
+			    		map.addOverlay(m_);
+						externals.put(m_, v.getUsername());
+					}
+					else
+					{
+						m.setLatLng(LatLng.newInstance(
+							Double.parseDouble(v.getLat()),
+							Double.parseDouble(v.getLon()))
+						);
+						GWT.log("Updated marker for video, id=" + v.getVid());
+
+					}
 				}
+
 			}
 		});
 

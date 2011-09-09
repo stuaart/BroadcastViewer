@@ -1,6 +1,6 @@
 package ob.client;
 
-import ob.client.model.Broadcaster;
+import ob.model.Broadcaster;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -8,6 +8,9 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("broadcasters")
 public interface BroadcasterService extends RemoteService 
 {
-	Broadcaster[] getBroadcasters() throws IllegalArgumentException;
-	String addBroadcasters() throws IllegalArgumentException;
+	ob.client.model.Broadcaster[] getAllBroadcasters() 
+		throws IllegalArgumentException;
+
+	// Temporary
+	void addBroadcasters() throws IllegalArgumentException;
 }

@@ -1,7 +1,7 @@
 package ob.server;
 
 import ob.client.BroadcasterService;
-import ob.client.model.Broadcaster;
+import ob.model.Broadcaster;
 import ob.shared.FieldVerifier;
 
 import com.google.gwt.core.client.GWT;
@@ -17,31 +17,35 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 							        implements BroadcasterService 
 {
 
-	public Broadcaster[] getBroadcasters() 
+	public ob.client.model.Broadcaster[] getAllBroadcasters() 
 		throws IllegalArgumentException 
 	{
-		List<Broadcaster> bs = new ArrayList<Broadcaster>();
+		List<ob.client.model.Broadcaster> bs = 
+			new ArrayList<ob.client.model.Broadcaster>();
 
 		final EntityManager em = EMFSingleton.getEntityManager();
-		System.out.println("Getting Broadcasters from DB");
+		System.out.println("Getting all Broadcasters from DB");
 		try
 		{
-			final Query q = 
+			final List<Broadcaster> bl = 
 				em.createQuery("SELECT FROM " 
-								+ ob.model.Broadcaster.class.getName());
-			final List<ob.model.Broadcaster> bl = q.getResultList();
-			for (final ob.model.Broadcaster b : bl)
+								+ Broadcaster.class.getName())
+				  .getResultList();
+
+			em.getTransaction().begin();
+			
+			for (final Broadcaster b : bl)
 			{
-				bs.add(new Broadcaster(b.getKey().getId(),
-									   b.getBroadcastId(),
-									   b.getJabberId(),
-									   b.getLatLng(), 
-									   b.getOrientation(), 
-									   b.getTimestamp())
+				bs.add(new ob.client.model.Broadcaster(b.getBroadcastId(),
+													   b.getJabberId(),
+													   b.getLatLng(), 
+													   b.getOrientation(), 
+													   b.getTimestamp())
 				);
-				System.out.println("Got Broadcaster, key=" + b.getKey() 
+				System.out.println("Got Broadcaster, key=" + b.getBroadcastId() 
 								   + ", latlng=" + b.getLatLng()[0]);
 			}
+			em.getTransaction().commit();			
 		}
 		catch (final Throwable t)
 		{
@@ -49,32 +53,31 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		}
 		finally
 		{
-			em.close();
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
+
 		}
 
-		return bs.toArray(new Broadcaster[0]);
+		em.close();
+
+		return bs.toArray(new ob.client.model.Broadcaster[0]);
  	}
 
-	public String addBroadcasters() throws IllegalArgumentException
+	public void deleteBroadcaster(final Broadcaster b)
+		throws IllegalArgumentException 	
 	{
 		final EntityManager em = EMFSingleton.getEntityManager();
-		System.out.println("Making some random Broadcasters");
+		System.out.println("Attempting to retrieve & delete Broadcaster");
 		try
 		{
-			for (int i = 0; i < 1; ++i)
-			{
-				final ob.model.Broadcaster b = new ob.model.Broadcaster();
-				b.setBroadcastId("stuaart");
-				b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 51.00), 
-										(float)(Math.random() + 1.0)});
-				b.setOrientation(new float[]{(float)Math.random(), 
-											 (float)Math.random(), 
-											 (float)Math.random()});
-				em.persist(b);
-				em.refresh(b);
-				System.out.println("Persisted new Broadcaster, key = " 
-								   + b.getKey());
-			}
+			em.getTransaction().begin();
+			final Broadcaster b_ = em.find(Broadcaster.class, 
+										   b.getBroadcastId());			
+			em.remove(b_);
+			em.getTransaction().commit();			
 		}
 		catch (final Throwable t)
 		{
@@ -82,9 +85,101 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		}
 		finally
 		{
-			em.close();
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
 		}
 
-		return "Success";
+		em.close();
+	}
+
+	public void updateBroadcaster(final Broadcaster b)
+		throws IllegalArgumentException 	
+	{
+		final EntityManager em = EMFSingleton.getEntityManager();
+		System.out.println("Attempting to retrieve & update Broadcaster");
+		try
+		{
+			em.getTransaction().begin();
+					
+			final Broadcaster b_ = em.find(Broadcaster.class, 
+										   b.getBroadcastId());
+			/*final List<Broadcaster> bl = 
+				em.createQuery("SELECT b FROM " 
+							   + Broadcaster.class.getName()
+							   + " b WHERE b.broadcastId = :id" )
+				  .setParameter("id", b.getBroadcastId());
+				  .getResultList();
+			if (bl.isEmpty())
+			{
+				em.persist(b);
+				em.refresh(b);
+				System.out.println("Couldn't find Broadcaster, so persisted new"
+								   + " Broadcaster, key = " + b.getKey());
+			}
+			else if (bl.size() == 1)
+			{
+				final Broadcaster b_ = bl.get(0);
+				b_.update(b);
+				System.out.println("Updated existing Broadcaster");
+			}
+			else
+			{
+				System.out.println("Error: too got too many Broadcasters for "
+								   + "query");
+			}
+*/
+			if (b_ == null)
+			{
+				em.persist(b);
+				em.refresh(b);
+				System.out.println("Couldn't find Broadcaster, so persisted new"
+								   + " Broadcaster, id = " 
+								   + b.getBroadcastId());
+			}
+			else
+			{
+				b_.update(b);
+				System.out.println("Updated existing Broadcaster");
+			}
+
+			em.getTransaction().commit();			
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
+		}
+
+		em.close();
+	}
+
+
+	// TEST METHOD BELOW
+	public void addBroadcasters() throws IllegalArgumentException
+	{
+		System.out.println("Making some random Broadcasters");
+		for (int i = 0; i < 1; ++i)
+		{
+			final Broadcaster b = new Broadcaster();
+			b.setBroadcastId("stuaart");
+			b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 51.00), 
+									(float)(Math.random() + 1.0)});
+			b.setOrientation(new float[]{(float)Math.random(), 
+										 (float)Math.random(), 
+										 (float)Math.random()});
+			updateBroadcaster(b);
+			System.out.println("Persisted new Broadcaster, key = " 
+							   + b.getBroadcastId());
+		}
 	}
 }

@@ -17,11 +17,12 @@ import javax.persistence.Id;
 public class Broadcaster
 {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Key key;
+	//@Id
+	//@GeneratedValue(strategy = GenerationType.IDENTITY)
+    //private Key key;
 
 	// Identifier for this Broadcaster's <video service> id
+	@Id
 	private String broadcastId;
 
 	// Identifier for this Broadcaster's Jabber id
@@ -53,11 +54,23 @@ public class Broadcaster
 		this.timestamp = timestamp;
 	}
 
+	public void update(final Broadcaster b)
+	{
+		if (b.getBroadcastId() != null)
+			this.setBroadcastId(b.getBroadcastId());
+		if (b.getJabberId() != null)
+			this.setJabberId(b.getJabberId());
+		if (b.getTimestamp() != null)
+			this.timestamp = b.getTimestamp();
 
-	public Key getKey()
+		this.latlng = b.getLatLng();
+		this.orien = b.getOrientation();
+	}
+
+/*	public Key getKey()
 	{
 		return key;
-	}
+	}*/
 	
 	public void setBroadcastId(final String broadcastId)
 	{

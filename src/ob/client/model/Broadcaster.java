@@ -5,9 +5,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class Broadcaster implements IsSerializable
 {
-
-	private long key;
-
+	// This is the primary key
 	// Identifier for this Broadcaster's <video service> id
 	private String broadcastId;
 
@@ -22,14 +20,12 @@ public class Broadcaster implements IsSerializable
 
 	public Broadcaster() {};
 
-	public Broadcaster(final long key, 
-					   final String broadcastId,
+	public Broadcaster(final String broadcastId,
 					   final String jabberId,
 					   final float[] latlng, 
 					   final float[] orien, 
 					   final Date timestamp)
 	{
-		this.key = key;
 		this.broadcastId = broadcastId;
 		this.jabberId = jabberId;
 		this.latlng = latlng;
@@ -37,14 +33,14 @@ public class Broadcaster implements IsSerializable
 		this.timestamp = timestamp;
 	}
 
-	public long getKey()
-	{
-		return key;
-	}
-
 	public String getBroadcastId()
 	{
 		return broadcastId;
+	}
+
+	public String getJabberId()
+	{
+		return jabberId;
 	}
 
 	public float[] getLatLng()

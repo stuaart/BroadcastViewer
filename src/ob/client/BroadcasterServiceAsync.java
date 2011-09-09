@@ -6,8 +6,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface BroadcasterServiceAsync 
 {
+	void getAllBroadcasters(AsyncCallback<Broadcaster[]> callback);
 
-	void getBroadcasters(AsyncCallback<Broadcaster[]> callback);
-	void addBroadcasters(AsyncCallback<String> callback);
+	// Temporary
+	void addBroadcasters(AsyncCallback<Void> callback);
 
 }
