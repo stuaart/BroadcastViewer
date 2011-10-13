@@ -81,22 +81,23 @@ public class BroadcastViewer implements EntryPoint
 	// true = live video, false = latest video
 	private static final boolean LIVE_ONLY = false;
 
-	private static final int VIDEO_WIDTH_MIN = 100;
-	private static final int VIDEO_HEIGHT_MIN = 100;
-	private static final int VIDEO_WIDTH_MAX = 500;
-	private static final int VIDEO_HEIGHT_MAX = 500;
+	public static final int VIDEO_WIDTH_MIN = 150;
+	public static final int VIDEO_HEIGHT_MIN = 150;
+	public static final int VIDEO_WIDTH_MAX = 500;
+	public static final int VIDEO_HEIGHT_MAX = 500;
+
+	public static final String MAP_WIDTH = "300px";
+	public static final String MAP_HEIGHT = "300px";
 
 
 	private BroadcasterServiceAsync bServ = 
 		GWT.create(BroadcasterService.class);
 
+	// NOTE: Broadcaster ID == Bambuser ID
 	// Broadcaster ID <-> Google Maps marker
 	private final BiMap<String, Marker> broadcasters = HashBiMap.create();
-	// Google Maps marker <-> Bambuser ID
-	private final BiMap<Marker, String> externals = HashBiMap.create();
-	// Bambuser ID -> Video Object
-	private final Map<String, Video> externalsVideos = 
-		new HashMap<String, Video>();
+	// Bambuser ID <-> Google Maps marker
+	private final BiMap<String, Marker> externals = HashBiMap.create();
 
 	private MapWidget map = null;
 
@@ -122,10 +123,12 @@ public class BroadcastViewer implements EntryPoint
 		final FlowPanel mainPanel = new FlowPanel();
 		final Button addBroadcasters = new Button("[Add Broadcasters]");
 		final Button getExternals = new Button("Get Externals");		
-		final Button popGrid = new Button("Populate Grid");		
+		final Button popGridE = new Button("Populate Grid - Externals");		
+		final Button popGridI = new Button("Populate Grid - Internals");
 		mainPanel.add(addBroadcasters);
 		mainPanel.add(getExternals);
-		mainPanel.add(popGrid);
+		mainPanel.add(popGridE);
+		mainPanel.add(popGridI);
 		RootPanel.get("markers").add(mainPanel);
 
 		addBroadcasters.addClickHandler(new ClickHandler() 
@@ -136,12 +139,20 @@ public class BroadcastViewer implements EntryPoint
 			   	populateBroadcasters();
       		}
 	    });
-		popGrid.addClickHandler(new ClickHandler() 
+		popGridE.addClickHandler(new ClickHandler() 
 		{
 			@Override
       		public void onClick(final ClickEvent event) 
 			{
-			   	populateBroadcastGrid(LIVE_ONLY);
+			   	populateBroadcastGrid(externals.keySet(), LIVE_ONLY);
+      		}
+	    });
+		popGridI.addClickHandler(new ClickHandler() 
+		{
+			@Override
+      		public void onClick(final ClickEvent event) 
+			{
+			   	populateBroadcastGrid(broadcasters.keySet(), LIVE_ONLY);
       		}
 	    });
  		getExternals.addClickHandler(new ClickHandler() 
@@ -164,7 +175,7 @@ public class BroadcastViewer implements EntryPoint
 	    });
 
 		map = new MapWidget(DEFAULT_MAP_CENTRE, DEFAULT_MAP_ZOOM);
-    	map.setSize("100%", "100%");
+    	map.setSize(MAP_WIDTH, MAP_HEIGHT);
     	map.addControl(new LargeMapControl());
 
 		map.addMapClickHandler(new MapClickHandler() 
@@ -177,11 +188,12 @@ public class BroadcastViewer implements EntryPoint
 
 		        if (overlay != null && overlay instanceof Marker)
 				{
-					final String bid = (broadcasters.inverse()).get(overlay);
+					String bid = (broadcasters.inverse()).get(overlay);
+					if (bid == null)
+						bid = (externals.inverse()).get(overlay);
+
 					if (bid != null)
 						showBroadcast(bid, LIVE_ONLY);
-					else if (externals.get(overlay) != null)
-						showBroadcast(externals.get(overlay), LIVE_ONLY);
 					else
 						Window.alert("Error handling marker selection");
 				}
@@ -368,12 +380,10 @@ public class BroadcastViewer implements EntryPoint
 			public void onRequestComplete(JavaScriptObject json)
 			{
 				final Result result = (Result)json;
-				externalsVideos.clear();
 
 				for (final Video v : result.getVideos())
 				{
-					externalsVideos.put(v.getUsername(), v);
-					final Marker m = (externals.inverse()).get(v.getUsername());
+					final Marker m = externals.get(v.getUsername());
 					if (m == null)
 					{
 						GWT.log("Getting video, id=" 
@@ -387,7 +397,7 @@ public class BroadcastViewer implements EntryPoint
 							'E'
 						);
 			    		map.addOverlay(m_);
-						externals.put(m_, v.getUsername());
+						externals.put(v.getUsername(), m_);
 					}
 					else
 					{
@@ -406,9 +416,24 @@ public class BroadcastViewer implements EntryPoint
 
 	}
 
-	private void populateBroadcastGrid(final boolean liveOnly)
+	private final Dimension scaleVideo(final Video v)
 	{
-		final Set<String> usernames = (externals.inverse()).keySet();
+		final int scale = v.getViewsLive();
+		GWT.log("scale = " + scale);
+		int width = VIDEO_WIDTH_MIN + scale * 10;
+		int height = VIDEO_HEIGHT_MIN + scale * 10;
+		if (width > VIDEO_WIDTH_MAX)
+			width = VIDEO_WIDTH_MAX;
+		if (height > VIDEO_HEIGHT_MAX)
+			height = VIDEO_HEIGHT_MAX;
+
+		return new Dimension(width, height);
+	}
+
+	private void populateBroadcastGrid(final Set<String> usernames, 
+									   final boolean liveOnly)
+	{
+		
 		int elems = 0;
 		for (final String username : usernames)
 		{
@@ -445,15 +470,17 @@ public class BroadcastViewer implements EntryPoint
 						GWT.log("Getting video, id=" 
 								+ String.valueOf(vid.getVid()) 
 								+ ", username=" + vid.getUsername());
+
+						final Dimension d = scaleVideo(vid);
+
 						final HTML embed = 
 							createBambuserEmbed("vid=" 
 								+ String.valueOf(vid.getVid()) + "&chat=no",
-								220, 150
+								d.getWidth(), d.getHeight()
 							);
 						
 						int row = broadcastGrid.getRowCount();
 						
-						GWT.log("row = " + row);
 						int col = 0;
 						try
 						{
@@ -468,15 +495,8 @@ public class BroadcastViewer implements EntryPoint
 							else
 								col += 1;
 						}
-						catch (final IndexOutOfBoundsException e)
-						{
-							GWT.log("First cell!");
-						}
+						catch (final IndexOutOfBoundsException e) { }
 												
-						GWT.log("col = " + col);
-
-						GWT.log("Adding new cell to grid: (" + row + "," 
-								+ col + ")");
     	    			broadcastGrid.setWidget(row, col, embed);
 					}
 					else
@@ -490,7 +510,10 @@ public class BroadcastViewer implements EntryPoint
 
 
 			if (elems++ > 9)
+			{
+				GWT.log("Grid size exceeded");
 				break;
+			}
 		}
 	}
 
@@ -587,8 +610,8 @@ public class BroadcastViewer implements EntryPoint
 					GWT.log("Getting video, id=" + vid.getVid() 
 							+ ", username=" + vid.getUsername());
 					final HTML embed = 
-						createBambuserEmbed("vid=" + vid.getVid() + "&chat=no",
-											320, 276);
+						createBambuserEmbed("vid=" + vid.getVid() + "&chat=yes",
+											300, 300);
 					broadcastPanel.setWidget(embed);
 				}
 				else
@@ -599,8 +622,8 @@ public class BroadcastViewer implements EntryPoint
 
 	}
 
-	private final HTML createBambuserEmbed(final String vars, 
-										   final int width, final int height)
+	private final HTML createBambuserEmbed(final String vars, final int width, 
+										   final int height)
 	{
 		return new HTML(
 			"<object id=\"bplayer\" "
@@ -610,7 +633,9 @@ public class BroadcastViewer implements EntryPoint
 			+ "src=\"http://static.bambuser.com/r/player.swf\" "
 			+ "type=\"application/x-shockwave-flash\" flashvars=\"" 
 			+ vars + 
-			"\" width=\"320\" height=\"276\" allowfullscreen=\"true\" "
+			"\" width=\"" + String.valueOf(width) + 
+			"\" height=\"" + String.valueOf(height) 
+			+ "\" allowfullscreen=\"true\" "
 			+ "allowscriptaccess=\"always\" wmode=\"opaque\"></embed>"
 			+ "<param name=\"movie\" "
 			+ "value=\"http://static.bambuser.com/r/player.swf\"></param>"
