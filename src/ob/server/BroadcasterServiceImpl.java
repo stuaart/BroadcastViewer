@@ -202,18 +202,40 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 	public void addBroadcasters() throws IllegalArgumentException
 	{
 		System.out.println("Making some random Broadcasters");
-		for (int i = 0; i < 1; ++i)
-		{
-			final Broadcaster b = new Broadcaster();
-			b.setBroadcastId("stuaart");
-			b.setLatLng(new float[]{(float)(Math.random() * 1.0 + 51.00), 
-									(float)(Math.random() + 1.0)});
-			b.setOrientation(new float[]{(float)Math.random(), 
-										 (float)Math.random(), 
-										 (float)Math.random()});
-			updateBroadcaster(b);
-			System.out.println("Persisted new Broadcaster, key = " 
-							   + b.getBroadcastId());
-		}
+		final Broadcaster b1 = new Broadcaster();
+		b1.setBroadcastId("stuaart");
+		b1.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+								(float)(Math.random() - 1.1481)});
+		b1.setOrientation(new float[]{(float)Math.random(), 
+									 (float)Math.random(), 
+									 (float)Math.random()});
+		b1.setViews(5);
+		
+		final Broadcaster b2 = new Broadcaster();
+		b2.setBroadcastId("drmartin");
+		b2.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+								(float)(Math.random() - 1.1481)});
+		b2.setOrientation(new float[]{(float)Math.random(), 
+									 (float)Math.random(), 
+									 (float)Math.random()});
+		b2.setViews(10);
+
+		final Broadcaster b3 = new Broadcaster();
+		b3.setBroadcastId("binaryprincess");
+		b3.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+								(float)(Math.random() - 1.1481)});
+		b3.setOrientation(new float[]{(float)Math.random(), 
+									 (float)Math.random(), 
+									 (float)Math.random()});
+		b3.setViews(2);
+
+
+		updateBroadcaster(b1);
+		updateBroadcaster(b2);
+		updateBroadcaster(b3);
+		System.out.println("Persisted new Broadcasters, keys: b1=" 
+						   + b1.getBroadcastId()
+						   + ", b2=" + b2.getBroadcastId()
+						   + ", b3=" + b3.getBroadcastId());
 	}
 }

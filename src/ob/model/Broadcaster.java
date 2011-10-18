@@ -21,9 +21,16 @@ public class Broadcaster
 	//@GeneratedValue(strategy = GenerationType.IDENTITY)
     //private Key key;
 
-	// Identifier for this Broadcaster's <video service> id
+	// This is the primary key
+	// Identifier for this Broadcaster's <video service> account, e.g., for 
+	// Bambuser broadcastId is their username
 	@Id
 	private String broadcastId;
+
+	// Identifier for this Broadcaster's video broadcast, derived from an 
+	// identifier for a particular video present on their <video service> 
+	// account
+	private String videoId = null;
 
 	// Identifier for this Broadcaster's Jabber id
 	private String jabberId;
@@ -34,6 +41,9 @@ public class Broadcaster
 
 	@Temporal(TIMESTAMP)
 	private Date timestamp;
+
+	private int views = 0;
+
 
 	public Broadcaster()
 	{
@@ -77,9 +87,19 @@ public class Broadcaster
 		this.broadcastId = broadcastId;
 	}
 
-	public String getBroadcastId()
+	public final String getBroadcastId()
 	{
 		return broadcastId;
+	}
+	
+	public void setVideoId(final String videoId)
+	{
+		this.videoId = videoId;
+	}
+
+	public final String getVideoId()
+	{
+		return videoId;
 	}
 
 	public void setJabberId(final String jabberId)
@@ -87,7 +107,7 @@ public class Broadcaster
 		this.jabberId = jabberId;
 	}
 
-	public String getJabberId()
+	public final String getJabberId()
 	{
 		return jabberId;
 	}
@@ -100,7 +120,7 @@ public class Broadcaster
 		this.latlng = latlng;
 	}
 
-	public float[] getLatLng()
+	public final float[] getLatLng()
 	{
 		return latlng;
 	}
@@ -113,7 +133,7 @@ public class Broadcaster
 		this.orien = orien;
 	}
 
-	public float[] getOrientation()
+	public final float[] getOrientation()
 	{
 		return orien;
 	}
@@ -123,9 +143,19 @@ public class Broadcaster
 		this.timestamp = timestamp;
 	}
 
-	public Date getTimestamp()
+	public final Date getTimestamp()
 	{
 		return timestamp;
+	}
+	
+	public void setViews(final int views)
+	{
+		this.views = views;
+	}
+
+	public final int getViews()
+	{
+		return views;
 	}
 
 }
