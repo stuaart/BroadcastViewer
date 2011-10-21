@@ -1,6 +1,8 @@
 // Taken from http://www.gwtsite.com/
 
 package ob.client.overlay;
+import com.google.gwt.core.client.GWT;
+
 
 public class JSONRequest 
 {
@@ -16,6 +18,7 @@ public class JSONRequest
 	{
 		createCallbackFunction(handler, callbackName);
 		addScript(url);
+		GWT.log("get(): " + url);
 	}
 
 	public static native void addScript(String url) 

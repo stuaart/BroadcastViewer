@@ -1,11 +1,18 @@
 package ob.client;
 
+import ob.client.model.Broadcaster;
+
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Icon;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.geom.Size;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.core.client.GWT;
+
 
 public class BroadcastViewerHelper
 {
@@ -31,5 +38,56 @@ public class BroadcastViewerHelper
 
 	    return new Marker(pos, options);
 	}
+
+	public static void updateBroadcaster(final BroadcasterServiceAsync service,
+										 final Broadcaster b)
+	{
+
+		final AsyncCallback<Void> callback = 
+			new AsyncCallback<Void>()
+		{
+			@Override
+			public void onFailure(final Throwable caught) 
+			{
+				Window.alert("Error updating Broadcaster");
+			}
+
+			@Override
+			public void onSuccess(Void v) 
+			{
+				GWT.log("Updated Broadcaster id=" 
+						+ b.getBroadcastId());
+			}
+		};
+		service.updateBroadcaster(b, callback);
+	}
+
+	public static final HTML createBambuserEmbed(final String vars, 
+												 final int width, 
+										  		 final int height)
+	{
+		return new HTML(
+			"<object id=\"bplayer\" "
+			+ "classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" "
+			+ "width=\"" + String.valueOf(width) + "\" height=\"" 
+			+ String.valueOf(height) + "\"><embed name=\"bplayer\" "
+			+ "src=\"http://static.bambuser.com/r/player.swf\" "
+			+ "type=\"application/x-shockwave-flash\" flashvars=\"" 
+			+ vars + 
+			"\" width=\"" + String.valueOf(width) + 
+			"\" height=\"" + String.valueOf(height) 
+			+ "\" allowfullscreen=\"true\" "
+			+ "allowscriptaccess=\"always\" wmode=\"opaque\"></embed>"
+			+ "<param name=\"movie\" "
+			+ "value=\"http://static.bambuser.com/r/player.swf\"></param>"
+			+ "<param name=\"flashvars\" value=\""
+			+ vars + 
+			"\"></param><param name=\"allowfullscreen\" value=\"true\">"
+			+ "</param><param name=\"allowscriptaccess\" value=\"always\">"
+			+"</param><param name=\"wmode\" value=\"opaque\"></param>"
+			+ "</object>"
+		);
+	}
+
 
 }

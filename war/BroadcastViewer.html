@@ -27,37 +27,130 @@
     <script type="text/javascript" language="javascript" 
 			src="broadcastviewer/broadcastviewer.nocache.js"></script>
 			<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAtF5SboVnhVj0WotUQSsLbBQm6mIxqHkxQ0GIaQ76A7J1HXMTaRSQDqXDW1pwpcAQ4NLcvKk0nBzNJQ" type="text/javascript"></script>
-  </head>
 
-  <!--                                           -->
-  <!-- The body can have arbitrary html, or      -->
-  <!-- you can leave the body empty if you want  -->
-  <!-- to create a completely dynamic UI.        -->
-  <!--                                           -->
-  <body>
+	<script type="text/javascript" language="javascript" 
+			src="treemap/jit-yc.js"></script>
+	<link type="text/css" href="treemap/base.css" rel="stylesheet" />
+	<link type="text/css" href="treemap/Treemap.css" rel="stylesheet" />
+
+	<script language="javascript" type="text/javascript">
+
+var labelType, useGradients, nativeTextSupport, animate;
+
+function init(){
+var json1 = {
+"children": [
+         {
+           "children": [], 
+           "data": {
+             "$color": "#AE5032", 
+             "image": "http://userserve-ak.last.fm/serve/300x300/8599099.jpg", 
+             "$area": 100
+           }, 
+           "id": "A", 
+           "name": "A"
+         }, 
+         {
+           "children": [], 
+           "data": {
+             "$color": "#B34B32", 
+             "image": "http://userserve-ak.last.fm/serve/300x300/30082075.jpg", 
+             "$area": 186
+           }, 
+           "id": "B", 
+           "name": "B"
+         },
+		 {
+           "children": [], 
+           "data": {
+             "$color": "#B34B32", 
+             "image": "http://userserve-ak.last.fm/serve/300x300/30082075.jpg", 
+             "$area": 106
+           }, 
+           "id": "C", 
+           "name": "C"
+         }
+
+       ], 
+       "id": "overview_All Broadcasters", 
+       "name": "All Broadcasters"
+
+};
+  //end
+  //init TreeMap
+  var tm = new $jit.TM.Squarified({
+    //where to inject the visualization
+    injectInto: 'infovis',
+    //parent box title heights
+    titleHeight: 15,
+    //box offsets
+    offset: 1,
+    //Attach left and right click events
+    Events: {
+      enable: false,
+      onClick: function(node) {
+        // Do something
+      }
+    },
+    duration: 1000,
+    //Enable tips
+    Tips: {
+      enable: false
+    },
+    //Add the name of the node in the correponding label
+    //This method is called once, on label creation.
+    onCreateLabel: function(domElement, node)
+	{
+        domElement.innerHTML = "<img src=\"" + node.data.image + "\">";
+        var style = domElement.style;
+        style.display = '';
+        style.border = '2px solid transparent';
+        domElement.onmouseover = function() {
+          style.border = '2px solid #9FD4FF';
+        };
+        domElement.onmouseout = function() {
+          style.border = '2px solid transparent';
+        };
+    }
+  });
+  tm.loadJSON(json1);
+  tm.refresh();
+}
+	</script>
+
+  	</head>
+
+  	<!--                                           -->
+  	<!-- The body can have arbitrary html, or      -->
+  	<!-- you can leave the body empty if you want  -->
+  	<!-- to create a completely dynamic UI.        -->
+  	<!--                                           -->
+  	<body onload="init();">
 
     <!-- OPTIONAL: include this if you want history support -->
     <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
     
-    <!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
-    <noscript>
-      <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
-        Your web browser must have JavaScript enabled
-        in order for this application to display correctly.
-      </div>
-    </noscript>
+    	<!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
+    	<noscript>
+			<div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
+        	Your web browser must have JavaScript enabled
+        	in order for this application to display correctly.
+      		</div>
+    	</noscript>
 
-	<h2>Populate / retrieve:</h2>
-	<div id="markers" style="width:200px"></div>
+		<h2>Populate / retrieve:</h2>
+		<div id="markers" style="width:200px"></div>
 
-	<h2>Selected broadcast:</h2>
-	<div id="selected_broadcast" style="height:300px"></div>
+		<h2>Selected broadcast:</h2>
+		<div id="selected_broadcast" style="height:300px"></div>
 
-	<h2>Map:</h2>
-	<div id="map" style="width:300px;height:300px"></div>
+		<h2>Map:</h2>
+		<div id="map" style="width:300px;height:300px"></div>
 
-	<h2>Broadcast grid:</h2>
-	<div id="broadcast_grid"></div>
+		<h2>Broadcast grid:</h2>
+		<div id="broadcast_grid"></div>
 
-  </body>
+		<h2>Experimental video grid</h2>
+		<div id="infovis"></div>
+  	</body>
 </html>

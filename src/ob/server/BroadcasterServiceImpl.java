@@ -1,27 +1,43 @@
 package ob.server;
 
 import ob.client.BroadcasterService;
+
+import ob.client.model.bambuser.Oembed;
+import ob.client.model.Config;
+
 import ob.model.Broadcaster;
-import ob.shared.FieldVerifier;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+
+import java.net.URL;
+import java.net.URLConnection;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Timer;
+import java.util.Map;
 
 import javax.persistence.Query;
 import javax.persistence.EntityManager;
+
+import org.codehaus.jackson.map.ObjectMapper;
+
 
 @SuppressWarnings("serial")
 public class BroadcasterServiceImpl extends RemoteServiceServlet 
 							        implements BroadcasterService 
 {
 
-	private static Runnable externalPoll = null;
+	private static Runnable serverPoll = null;
 	private final Timer timer = new Timer();
     private static final long POLL_INTERVAL = 10000;
+
+	private static final Config config = ConfigServiceImpl.getConfigStatic();
+
 
 	public static void deleteBroadcaster(final Broadcaster b)
 	{
@@ -51,55 +67,83 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		em.close();
 	}
 
-	public static void updateBroadcaster(final Broadcaster b)
+	// Read-only method for getting a list of Broadcasters
+	public static final List<Broadcaster> getBroadcasterList()
 	{
+		List<Broadcaster> bl = null; 
+
 		final EntityManager em = EMFSingleton.getEntityManager();
-		System.out.println("Attempting to retrieve & update Broadcaster");
+		em.getTransaction().begin();
+		
 		try
 		{
-			em.getTransaction().begin();
-					
-			final Broadcaster b_ = em.find(Broadcaster.class, 
-										   b.getBroadcastId());
-			/*final List<Broadcaster> bl = 
-				em.createQuery("SELECT b FROM " 
-							   + Broadcaster.class.getName()
-							   + " b WHERE b.broadcastId = :id" )
-				  .setParameter("id", b.getBroadcastId());
-				  .getResultList();
-			if (bl.isEmpty())
+			bl = em.createQuery("SELECT FROM " 
+				 			    + Broadcaster.class.getName())
+				   .getResultList();
+			em.getTransaction().commit();			
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
 			{
-				em.persist(b);
-				em.refresh(b);
-				System.out.println("Couldn't find Broadcaster, so persisted new"
-								   + " Broadcaster, key = " + b.getKey());
-			}
-			else if (bl.size() == 1)
-			{
-				final Broadcaster b_ = bl.get(0);
-				b_.update(b);
-				System.out.println("Updated existing Broadcaster");
-			}
-			else
-			{
-				System.out.println("Error: too got too many Broadcasters for "
-								   + "query");
-			}
-*/
-			if (b_ == null)
-			{
-				em.persist(b);
-				em.refresh(b);
-				System.out.println("Couldn't find Broadcaster, so persisted new"
-								   + " Broadcaster, id = " 
-								   + b.getBroadcastId());
-			}
-			else
-			{
-				b_.update(b);
-				System.out.println("Updated existing Broadcaster");
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
 			}
 
+		}
+
+		System.out.println("Getting all (" + bl.size() + ") Broadcasters");
+		em.close();
+
+		return bl;
+	}
+
+	// Read-only method for getting a single Broadcaster
+	public static final Broadcaster getBroadcaster(final String bid)
+	{
+		Broadcaster b = null;
+
+		final EntityManager em = EMFSingleton.getEntityManager();
+		em.getTransaction().begin();
+		try
+		{
+					
+			b = em.find(Broadcaster.class, bid);
+
+			em.getTransaction().commit();			
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
+		}
+
+		em.close();
+
+		return b;
+	}
+
+	// Update managed Broadcaster with the details of this unmanaged one
+	public static void addBroadcaster(final Broadcaster b)
+	{
+		final EntityManager em = EMFSingleton.getEntityManager();
+		System.out.println("Attempting add a new Broadcaster");
+		try
+		{		
+			em.getTransaction().begin();
+			em.persist(b);
+			em.refresh(b);
 			em.getTransaction().commit();			
 		}
 		catch (final Throwable t)
@@ -119,64 +163,87 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 	}
 
 
-	// Service methods below
 
-	public void startExternalPoll() throws IllegalArgumentException
+	@Override
+	public void startServerPoll() throws IllegalArgumentException
 	{
-		if (externalPoll == null)
+		System.out.println("startServerPoll()");
+		if (serverPoll != null)
 		{
-			externalPoll = new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					while (true)
-					{
-						try 
-						{
-							Thread.sleep(POLL_INTERVAL);
-						} 
-						catch (final Throwable e) 
-						{
-							System.out.println(e.toString());
-							System.out.println("Extenral poll interrupted");
-						}
-					}
- 				}
-				
-			};
-			externalPoll.run();
+			System.out.println("Server poll already running");
+			return;
 		}
+		else
+			System.out.println("Initiating server poll");
+
+		serverPoll = new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				while (true)
+				{
+					try 
+					{
+						System.out.println("Poll process, serverside");
+						
+						BroadcasterCacheServiceImpl.updateCacheStatic();
+						
+						// And sleep
+						Thread.sleep(POLL_INTERVAL);
+					} 
+					catch (final Throwable e) 
+					{
+						System.out.println(e.toString());
+						System.out.println("Extenral poll interrupted");
+					}
+				}
+			}
+		};
+
+		if (serverPoll != null)
+			serverPoll.run();
+
 	}
 
-	public ob.client.model.Broadcaster[] getAllBroadcasters() 
-		throws IllegalArgumentException 
+	@Override
+	public final ob.client.model.Broadcaster[] getAllBroadcasters() 
 	{
-		List<ob.client.model.Broadcaster> bs = 
+		final List<ob.client.model.Broadcaster> bs = 
 			new ArrayList<ob.client.model.Broadcaster>();
+ 
+		List<Broadcaster> bl = new ArrayList<Broadcaster>();
 
 		final EntityManager em = EMFSingleton.getEntityManager();
-		System.out.println("Getting all Broadcasters from DB");
+		em.getTransaction().begin();
+		
 		try
 		{
-			final List<Broadcaster> bl = 
-				em.createQuery("SELECT FROM " 
-								+ Broadcaster.class.getName())
-				  .getResultList();
-
-			em.getTransaction().begin();
-			
+			bl = em.createQuery("SELECT FROM " 
+				 			    + Broadcaster.class.getName())
+				   .getResultList();
 			for (final Broadcaster b : bl)
 			{
-				bs.add(new ob.client.model.Broadcaster(b.getBroadcastId(),
-													   b.getJabberId(),
-													   b.getLatLng(), 
-													   b.getOrientation(), 
-													   b.getTimestamp())
-				);
-				System.out.println("Got Broadcaster, key=" + b.getBroadcastId() 
-								   + ", latlng=" + b.getLatLng()[0]);
+				final ob.client.model.Broadcaster b_ = 
+					new ob.client.model.Broadcaster(b.getBroadcastId(),
+													b.getJabberId(),
+													b.getLatLng(), 
+													b.getOrientation(), 
+													b.getTimestamp());
+				b_.setViews(b.getViews());
+				b_.setVideoId(b.getVideoId());
+				b_.setThumbnailURL(b.getThumbnailURL());
+
+				bs.add(b_);
+			
+				System.out.println("getAllBroadcasters(); key=" 
+								   + b.getBroadcastId() 
+								   + ", latlng=" + b.getLatLng()[0]
+								   + ", videoId=" + b.getVideoId()
+								   + ", views=" + b.getViews()
+								   + ", thumbnailURL=" + b.getThumbnailURL());
 			}
+
 			em.getTransaction().commit();			
 		}
 		catch (final Throwable t)
@@ -194,48 +261,176 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		}
 
 		em.close();
-
 		return bs.toArray(new ob.client.model.Broadcaster[0]);
  	}
 
-	// TEST METHOD BELOW
-	public void addBroadcasters() throws IllegalArgumentException
+	@Override
+	public void updateBroadcaster(final ob.client.model.Broadcaster b)
 	{
-		System.out.println("Making some random Broadcasters");
-		final Broadcaster b1 = new Broadcaster();
-		b1.setBroadcastId("stuaart");
-		b1.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
-								(float)(Math.random() - 1.1481)});
-		b1.setOrientation(new float[]{(float)Math.random(), 
-									 (float)Math.random(), 
-									 (float)Math.random()});
-		b1.setViews(5);
+
+		final EntityManager em = EMFSingleton.getEntityManager();
+		em.getTransaction().begin();
 		
-		final Broadcaster b2 = new Broadcaster();
-		b2.setBroadcastId("drmartin");
-		b2.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
-								(float)(Math.random() - 1.1481)});
-		b2.setOrientation(new float[]{(float)Math.random(), 
-									 (float)Math.random(), 
-									 (float)Math.random()});
-		b2.setViews(10);
+		try
+		{
+			final Broadcaster b_ = 
+				em.find(Broadcaster.class, b.getBroadcastId());
+			b_.update(b);
 
-		final Broadcaster b3 = new Broadcaster();
-		b3.setBroadcastId("binaryprincess");
-		b3.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
-								(float)(Math.random() - 1.1481)});
-		b3.setOrientation(new float[]{(float)Math.random(), 
-									 (float)Math.random(), 
-									 (float)Math.random()});
-		b3.setViews(2);
+			System.out.println("Updated Broadcaster, key=" + b.getBroadcastId() 
+								   + ", latlng=" + b.getLatLng()[0]
+								   + ", videoId=" + b.getVideoId());
+			em.flush();
+			em.getTransaction().commit();
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
 
+		}
 
-		updateBroadcaster(b1);
-		updateBroadcaster(b2);
-		updateBroadcaster(b3);
-		System.out.println("Persisted new Broadcasters, keys: b1=" 
-						   + b1.getBroadcastId()
-						   + ", b2=" + b2.getBroadcastId()
-						   + ", b3=" + b3.getBroadcastId());
+		em.close();
 	}
+
+	public static final Oembed getOembedStatic(final String videoId)
+	{
+		Oembed oembed = null;
+		try
+		{
+
+			final String url = ConfigServiceImpl
+									.getConfigStatic()
+									.getBambuserOembedURL() 
+							   + videoId;
+			
+			URLConnection uc = new URL(url).openConnection();
+        	BufferedReader in = new BufferedReader(
+            	                    new InputStreamReader(uc.getInputStream())
+								);
+	        String line;
+			final StringBuffer s = new StringBuffer();
+	        while ((line = in.readLine()) != null) 
+				s.append(line);
+	        in.close();
+			
+			final ObjectMapper mapper = new ObjectMapper();
+			final Map<String, String> map = 
+				mapper.readValue(s.toString(), Map.class);
+
+			oembed = new Oembed();
+			oembed.setType(map.get("type"));
+			oembed.setVersion(map.get("version"));
+			oembed.setAuthorName(map.get("author_name"));
+			oembed.setAuthorURL(map.get("author_url"));
+			oembed.setTitle(map.get("title"));
+			oembed.setThumbnailURL(map.get("thumbnail_url"));
+			oembed.setThumbnailWidth(map.get("thumbnail_width"));
+			oembed.setThumbnailHeight(map.get("thumbnail_height"));
+			oembed.setProviderName(map.get("provider_name"));
+			oembed.setProviderURL(map.get("provider_url"));
+			oembed.setHTML(map.get("html"));
+			oembed.setWidth(map.get("width"));
+			oembed.setHeight(map.get("height"));
+		}
+		catch (final Throwable e)
+		{
+			System.out.println(e.toString());
+		}
+
+		return oembed;
+	}
+
+	@Override
+	public final Oembed getOembed(final String videoId)
+	{
+		return getOembedStatic(videoId);
+	}
+
+
+
+
+	// TEST METHOD BELOW
+	@Override
+	public void addBroadcasters()
+	{
+		final EntityManager em = EMFSingleton.getEntityManager();
+
+		try
+		{
+
+			System.out.println("Making some random Broadcasters");
+			final Broadcaster b1 = new Broadcaster();
+			b1.setBroadcastId("stuaart");
+			b1.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+									(float)(Math.random() - 1.1481)});
+			b1.setOrientation(new float[]{(float)Math.random(), 
+										 (float)Math.random(), 
+										 (float)Math.random()});
+			b1.setViews(5);
+			
+			final Broadcaster b2 = new Broadcaster();
+			b2.setBroadcastId("drmartin");
+			b2.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+									(float)(Math.random() - 1.1481)});
+			b2.setOrientation(new float[]{(float)Math.random(), 
+										 (float)Math.random(), 
+										 (float)Math.random()});
+			b2.setViews(10);
+
+			final Broadcaster b3 = new Broadcaster();
+			b3.setBroadcastId("binaryprincess");
+			b3.setLatLng(new float[]{(float)(Math.random() * 0.2 + 52.9499), 
+									(float)(Math.random() - 1.1481)});
+			b3.setOrientation(new float[]{(float)Math.random(), 
+										 (float)Math.random(), 
+										 (float)Math.random()});
+			b3.setViews(2);
+
+			System.out.println("Persisting and refreshing");
+
+			em.getTransaction().begin();
+			em.persist(b1);
+			em.getTransaction().commit();			
+			
+			em.getTransaction().begin();			
+			em.persist(b2);
+			em.getTransaction().commit();			
+			
+			em.getTransaction().begin();			
+			em.persist(b3);
+			em.getTransaction().commit();			
+			
+			
+			System.out.println("Persisted new Broadcasters, keys: b1=" 
+						   	   + b1.getBroadcastId()
+						       + ", b2=" + b2.getBroadcastId()
+						       + ", b3=" + b3.getBroadcastId());
+
+		}
+		catch (final Throwable t)
+		{
+			System.out.println(t.toString());
+			t.printStackTrace();
+		}
+		finally
+		{
+			if (em.getTransaction().isActive())
+			{
+				em.getTransaction().rollback();
+				System.out.println("Rolling current transaction back");
+			}
+		}
+
+		em.close();
+
+	}
+
 }

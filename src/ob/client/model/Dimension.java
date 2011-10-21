@@ -1,6 +1,8 @@
-package ob.client;
+package ob.client.model;
 
-public class Dimension
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class Dimension implements IsSerializable
 {
 
 	private int width;

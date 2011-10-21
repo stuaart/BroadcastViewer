@@ -44,6 +44,7 @@ public class Broadcaster
 
 	private int views = 0;
 
+	private String thumbnailURL = null;
 
 	public Broadcaster()
 	{
@@ -73,8 +74,36 @@ public class Broadcaster
 		if (b.getTimestamp() != null)
 			this.timestamp = b.getTimestamp();
 
-		this.latlng = b.getLatLng();
-		this.orien = b.getOrientation();
+		setLatLng(b.getLatLng());
+		setOrientation(b.getOrientation());
+
+		this.views = b.getViews();
+		if (b.getVideoId() != null)
+			this.videoId = b.getVideoId();
+
+		if (b.getThumbnailURL() != null)
+			this.thumbnailURL = b.getThumbnailURL();
+	}
+
+	public void update(final ob.client.model.Broadcaster b)
+	{
+		if (b.getBroadcastId() != null)
+			this.setBroadcastId(b.getBroadcastId());
+		if (b.getJabberId() != null)
+			this.setJabberId(b.getJabberId());
+		if (b.getTimestamp() != null)
+			this.timestamp = b.getTimestamp();
+
+		setLatLng(b.getLatLng());
+		setOrientation(b.getOrientation());
+
+		this.views = b.getViews();
+		if (b.getVideoId() != null)
+			this.videoId = b.getVideoId();
+
+		if (b.getThumbnailURL() != null)
+			this.thumbnailURL = b.getThumbnailURL();
+
 	}
 
 /*	public Key getKey()
@@ -118,6 +147,8 @@ public class Broadcaster
 			return;
 
 		this.latlng = latlng;
+
+		System.out.println("setLatLng()=" + this.latlng[0]);
 	}
 
 	public final float[] getLatLng()
@@ -156,6 +187,16 @@ public class Broadcaster
 	public final int getViews()
 	{
 		return views;
+	}
+
+	public final String getThumbnailURL()
+	{
+		return this.thumbnailURL;
+	}
+
+	public void setThumbnailURL(final String thumbnailURL)
+	{
+		this.thumbnailURL = thumbnailURL;
 	}
 
 }

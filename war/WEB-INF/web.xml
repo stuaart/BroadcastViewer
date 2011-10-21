@@ -5,31 +5,48 @@
 
 <web-app>
   
-  <!-- Servlets -->
-  <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>ob.server.GreetingServiceImpl</servlet-class>
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/broadcastviewer/greet</url-pattern>
-  </servlet-mapping>
+  	<!-- Servlets -->
+  	<servlet>
+    	<servlet-name>greetServlet</servlet-name>
+    	<servlet-class>ob.server.GreetingServiceImpl</servlet-class>
+  	</servlet>
+  	<servlet-mapping>
+    	<servlet-name>greetServlet</servlet-name>
+    	<url-pattern>/broadcastviewer/greet</url-pattern>
+  	</servlet-mapping>
  
-  <servlet>
-    <servlet-name>broadcasterServlet</servlet-name>
-    <servlet-class>ob.server.BroadcasterServiceImpl</servlet-class>
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>broadcasterServlet</servlet-name>
-    <url-pattern>/broadcastviewer/broadcasters</url-pattern>
-  </servlet-mapping>
+  	<servlet>
+    	<servlet-name>broadcasterServlet</servlet-name>
+    	<servlet-class>ob.server.BroadcasterServiceImpl</servlet-class>
+  	</servlet>
+  	<servlet-mapping>
+    	<servlet-name>broadcasterServlet</servlet-name>
+    	<url-pattern>/broadcastviewer/broadcasters</url-pattern>
+  	</servlet-mapping>
+
+	<servlet>
+    	<servlet-name>configServlet</servlet-name>
+    	<servlet-class>ob.server.ConfigServiceImpl</servlet-class>
+  	</servlet>
+  	<servlet-mapping>
+    	<servlet-name>configServlet</servlet-name>
+    	<url-pattern>/broadcastviewer/config</url-pattern>
+  	</servlet-mapping>
+	
+	<servlet>
+    	<servlet-name>broadcasterCacheServlet</servlet-name>
+    	<servlet-class>ob.server.BroadcasterCacheServiceImpl</servlet-class>
+  	</servlet>
+  	<servlet-mapping>
+    	<servlet-name>broadcasterCacheServlet</servlet-name>
+    	<url-pattern>/broadcastviewer/updatecache</url-pattern>
+  	</servlet-mapping>
 
 
-  <!-- Default page to serve -->
-  <welcome-file-list>
-    <welcome-file>BroadcastViewer.html</welcome-file>
-  </welcome-file-list>
+
+  	<!-- Default page to serve -->
+  	<welcome-file-list>
+  		<welcome-file>BroadcastViewer.html</welcome-file>
+  	</welcome-file-list>
 
 </web-app>

@@ -26,6 +26,9 @@ public class Broadcaster implements IsSerializable
 
 	private int views = 0;
 
+	private String thumbnailURL = null;
+
+
 	public Broadcaster() {};
 
 	public Broadcaster(final String broadcastId,
@@ -79,6 +82,21 @@ public class Broadcaster implements IsSerializable
 	public int getViews()
 	{
 		return views;
+	}
+
+	public void setViews(final int views)
+	{
+		this.views = views;
+	}
+
+	public String getThumbnailURL()
+	{
+		return this.thumbnailURL;
+	}
+
+	public void setThumbnailURL(final String thumbnailURL)
+	{
+		this.thumbnailURL = thumbnailURL;
 	}
 
 }
