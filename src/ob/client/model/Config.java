@@ -14,6 +14,8 @@ public class Config implements IsSerializable
 	private Dimension[] videoDimensions;
 	private String[] mapDimensions;
 	private boolean isServerPoll;
+	private boolean isGWTGrid;
+	private String gridName;
 
 	public Config() {};
 
@@ -22,7 +24,8 @@ public class Config implements IsSerializable
 				  final double[] defaultMapCentre, final int defaultMapZoom,
 				  final int refreshInterval, final boolean isLive,
 				  final Dimension[] videoDimensions, 
-				  final String[] mapDimensions, final boolean isServerPoll)
+				  final String[] mapDimensions, final boolean isServerPoll,
+				  final boolean isGWTGrid, final String gridName)
 	{
 		this.boundsKML = boundsKML;
 		this.bambuserOembedURL = bambuserOembedURL;
@@ -34,6 +37,8 @@ public class Config implements IsSerializable
 		this.videoDimensions = videoDimensions;
 		this.mapDimensions = mapDimensions;
 		this.isServerPoll = isServerPoll;
+		this.isGWTGrid = isGWTGrid;
+		this.gridName = gridName;
 	}
 
 	public final String getBoundsKML()
@@ -84,6 +89,16 @@ public class Config implements IsSerializable
 	public final boolean isServerPoll()
 	{
 		return isServerPoll;
+	}
+
+	public final boolean isGWTGrid()
+	{
+		return isGWTGrid;
+	}
+
+	public final String getGridName()
+	{
+		return gridName;
 	}
 
 }

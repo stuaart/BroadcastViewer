@@ -93,9 +93,25 @@ public class BroadcastViewer implements EntryPoint
 	private FlexTable broadcastGrid = null;
 
 	
+	public void clickHandler(final String id)
+	{
+		if (id != null && config != null)
+			showBroadcast(id, config.isLive());
+	}
+	
+	public native void clickHandlerExport(final String id)
+	/*-{
+		var that = this;
+		$wnd.clickHandler = $entry(function(id) 
+		{
+			that.@ob.client.BroadcastViewer::clickHandler(Ljava/lang/String;)(id)
+		});
+	}-*/;
 
 	public void onModuleLoad() 
   	{
+
+		clickHandlerExport(null);
 
 		if (bServ == null) 
 			bServ = GWT.create(BroadcasterService.class);
@@ -131,8 +147,11 @@ public class BroadcastViewer implements EntryPoint
 		broadcastPanel = new SimplePanel();
 		RootPanel.get("selected_broadcast").add(broadcastPanel);
 
-		broadcastGrid = new FlexTable();
-		RootPanel.get("broadcast_grid").add(broadcastGrid);
+		if (config.isGWTGrid())
+		{
+			broadcastGrid = new FlexTable();
+			RootPanel.get(config.getGridName()).add(broadcastGrid);
+		}
 
 		final FlowPanel mainPanel = new FlowPanel();
 		final Button addBroadcasters = new Button("[Add Broadcasters]");
@@ -188,7 +207,7 @@ public class BroadcastViewer implements EntryPoint
 		map.addMapClickHandler(new MapClickHandler() 
 		{
 			@Override
-      		public void onClick(MapClickEvent e) 
+      		public void onClick(final MapClickEvent e) 
 			{
         		MapWidget sender = e.getSender();
 		        Overlay overlay = e.getOverlay();
@@ -222,7 +241,7 @@ public class BroadcastViewer implements EntryPoint
 			}
 
 			@Override
-			public void onSuccess(String url, GeoXmlOverlay overlay) 
+			public void onSuccess(final String url, final GeoXmlOverlay overlay)
 			{
 				// NOTE: workaround due to bug; Issue 459 on gwt-google-apis
 				if (!overlayCache) 
@@ -256,8 +275,11 @@ public class BroadcastViewer implements EntryPoint
 			public void run()
 			{
 				getAllBroadcasters();
-				broadcastGrid.clear();
-			   	populateBroadcastGrid(markersInt.keySet(), config.isLive());
+				if (config.isGWTGrid())
+				{
+					broadcastGrid.clear();
+				   	populateBroadcastGrid(markersInt.keySet(), config.isLive());
+				}
 			}
 		};
 		refreshTimer.scheduleRepeating(config.getRefreshInterval());
@@ -274,11 +296,11 @@ public class BroadcastViewer implements EntryPoint
 			@Override
 			public void onFailure(final Throwable caught) 
 			{
-				Window.alert("Error starting poll");
+				//Window.alert("Error starting poll");
 			}
 
 			@Override
-			public void onSuccess(Void v) 
+			public void onSuccess(final Void v) 
 			{
 				GWT.log("Server poll initiated");
 			}
@@ -513,7 +535,7 @@ public class BroadcastViewer implements EntryPoint
 			}
 
 			@Override
-			public void onSuccess(Oembed o) 
+			public void onSuccess(final Oembed o) 
 			{
 				GWT.log("Got thumbnail URL: " + o.getThumbnailURL());
 				final HTML embed = new HTML("<img src=\"" 

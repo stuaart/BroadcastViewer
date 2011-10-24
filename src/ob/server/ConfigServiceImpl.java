@@ -40,11 +40,16 @@ public class ConfigServiceImpl extends RemoteServiceServlet
 	// Is a poll conducted on the server (devmode) or is it a cron job?
 	public static final boolean IS_SERVER_POLL = true;
 
-	
+	// Draw GWT-based video grid or Javascript one?
+	public static final boolean IS_GWT_GRID = false;
+
+	public static final String GRID_NAME = "broadcast_grid";
+
 	private static final Config c = 
 		new Config(BOUNDS_KML, API_URL, API_OEMBED_URL, DEFAULT_MAP_CENTRE, 
 				   DEFAULT_MAP_ZOOM, REFRESH_INTERVAL, IS_LIVE, 
-				   VIDEO_DIMENSIONS, MAP_DIMENSIONS, IS_SERVER_POLL);
+				   VIDEO_DIMENSIONS, MAP_DIMENSIONS, IS_SERVER_POLL,
+				   IS_GWT_GRID, GRID_NAME);
 	
 
 	@Override

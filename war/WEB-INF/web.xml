@@ -42,6 +42,14 @@
     	<url-pattern>/broadcastviewer/updatecache</url-pattern>
   	</servlet-mapping>
 
+	<servlet>
+    	<servlet-name>broadcasterJSONServlet</servlet-name>
+    	<servlet-class>ob.server.BroadcasterJSON</servlet-class>
+  	</servlet>
+  	<servlet-mapping>
+    	<servlet-name>broadcasterJSONServlet</servlet-name>
+    	<url-pattern>/broadcastviewer/json</url-pattern>
+  	</servlet-mapping>
 
 
   	<!-- Default page to serve -->

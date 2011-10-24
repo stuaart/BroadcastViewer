@@ -100,14 +100,13 @@ public class BroadcasterCacheServiceImpl extends RemoteServiceServlet
 				 				  .getThumbnailURL()
 				);
 
-				// TEMP HACK
+/*				// TEMP HACK
 				final float[] l = b.getLatLng();
 				float[] l_ = 
 					new float[] {l[0] + (float)((Math.random() - 0.5) * 0.1), 
 								 l[1] + (float)((Math.random() - 0.5) * 0.1)};
-				System.out.println("old latlng=" + b.getLatLng()[0] 
-								   + "; new latlng=" + l_[0]);
 				b.setLatLng(l_);
+*/
 				em.flush();
 
 				em.getTransaction().commit();

@@ -147,8 +147,6 @@ public class Broadcaster
 			return;
 
 		this.latlng = latlng;
-
-		System.out.println("setLatLng()=" + this.latlng[0]);
 	}
 
 	public final float[] getLatLng()

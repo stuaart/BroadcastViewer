@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.Map;
+import java.util.Collections;
 
 import javax.persistence.Query;
 import javax.persistence.EntityManager;
@@ -99,7 +100,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 		System.out.println("Getting all (" + bl.size() + ") Broadcasters");
 		em.close();
 
-		return bl;
+		return Collections.unmodifiableList(bl);
 	}
 
 	// Read-only method for getting a single Broadcaster
@@ -240,8 +241,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 								   + b.getBroadcastId() 
 								   + ", latlng=" + b.getLatLng()[0]
 								   + ", videoId=" + b.getVideoId()
-								   + ", views=" + b.getViews()
-								   + ", thumbnailURL=" + b.getThumbnailURL());
+								   + ", views=" + b.getViews());
 			}
 
 			em.getTransaction().commit();			
@@ -278,8 +278,9 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 			b_.update(b);
 
 			System.out.println("Updated Broadcaster, key=" + b.getBroadcastId() 
-								   + ", latlng=" + b.getLatLng()[0]
-								   + ", videoId=" + b.getVideoId());
+							   + ", latlng=" + b.getLatLng()[0]
+							   + ", videoId=" + b.getVideoId()
+							   + ", views=" + b.getViews());
 			em.flush();
 			em.getTransaction().commit();
 		}
