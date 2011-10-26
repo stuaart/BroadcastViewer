@@ -14,7 +14,7 @@ import javax.persistence.Id;
 
 
 @Entity
-public class Broadcaster
+public class Broadcaster implements Comparable<Broadcaster>
 {
 
 	//@Id
@@ -105,6 +105,11 @@ public class Broadcaster
 			this.thumbnailURL = b.getThumbnailURL();
 
 	}
+
+	public int compareTo(final Broadcaster b) 
+	{
+		return b.getViews() - this.getViews();
+    }
 
 /*	public Key getKey()
 	{

@@ -11,11 +11,15 @@ public class Config implements IsSerializable
 	private int defaultMapZoom;
 	private int refreshInterval;
 	private boolean isLive;
-	private Dimension[] videoDimensions;
+	private Dimension[] videoDimensionsLimits;
 	private String[] mapDimensions;
 	private boolean isServerPoll;
 	private boolean isGWTGrid;
 	private String gridName;
+	private boolean gridFiller;
+	private Dimension broadcastWindowDimension;
+	private boolean isOverlayVisible;
+	private int maxGrid;
 
 	public Config() {};
 
@@ -25,7 +29,10 @@ public class Config implements IsSerializable
 				  final int refreshInterval, final boolean isLive,
 				  final Dimension[] videoDimensions, 
 				  final String[] mapDimensions, final boolean isServerPoll,
-				  final boolean isGWTGrid, final String gridName)
+				  final boolean isGWTGrid, final String gridName,
+				  final boolean gridFiller, 
+				  final Dimension broadcastWindowDimension,
+				  final boolean isOverlayVisible, final int maxGrid)
 	{
 		this.boundsKML = boundsKML;
 		this.bambuserOembedURL = bambuserOembedURL;
@@ -34,11 +41,15 @@ public class Config implements IsSerializable
 		this.defaultMapZoom = defaultMapZoom;
 		this.refreshInterval = refreshInterval;
 		this.isLive = isLive;
-		this.videoDimensions = videoDimensions;
+		this.videoDimensionsLimits = videoDimensionsLimits;
 		this.mapDimensions = mapDimensions;
 		this.isServerPoll = isServerPoll;
 		this.isGWTGrid = isGWTGrid;
 		this.gridName = gridName;
+		this.gridFiller = gridFiller;
+		this.broadcastWindowDimension = broadcastWindowDimension;
+		this.isOverlayVisible = isOverlayVisible;
+		this.maxGrid = maxGrid;
 	}
 
 	public final String getBoundsKML()
@@ -76,9 +87,9 @@ public class Config implements IsSerializable
 		return isLive;
 	}
 
-	public final Dimension[] getVideoDimensions() 
+	public final Dimension[] getVideoDimensionsLimits() 
 	{
-		return videoDimensions;
+		return videoDimensionsLimits;
 	}
 
 	public final String[] getMapDimensions() 	
@@ -99,6 +110,26 @@ public class Config implements IsSerializable
 	public final String getGridName()
 	{
 		return gridName;
+	}
+
+	public final boolean gridFiller()
+	{
+		return gridFiller;
+	}
+
+	public final Dimension getBroadcastWindowDimension() 
+	{
+		return broadcastWindowDimension;
+	}
+
+	public final boolean isOverlayVisible()
+	{
+		return isOverlayVisible;
+	}
+
+	public final int getMaxGrid() 
+	{
+		return maxGrid;
 	}
 
 }

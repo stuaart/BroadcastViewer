@@ -7,12 +7,13 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface BroadcasterServiceAsync 
 {
-	void getAllBroadcasters(AsyncCallback<Broadcaster[]> callback);
-	void updateBroadcaster(Broadcaster b, AsyncCallback<Void> callback);
+	void getBroadcasters_(boolean active, AsyncCallback<Broadcaster[]> callback);
+	void getAllBroadcasters_(AsyncCallback<Broadcaster[]> callback);	
+	void updateBroadcaster_(Broadcaster b, AsyncCallback<Void> callback);
 	void getOembed(String videoId, AsyncCallback<Oembed> callback);
 	void startServerPoll(AsyncCallback<Void> callback);
 
-	// Temporary
+	// Admin use
 	void addBroadcasters(AsyncCallback<Void> callback);
-
+	void deleteBroadcaster(String bid, AsyncCallback<Void> callback);
 }

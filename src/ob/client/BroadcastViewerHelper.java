@@ -59,7 +59,7 @@ public class BroadcastViewerHelper
 						+ b.getBroadcastId());
 			}
 		};
-		service.updateBroadcaster(b, callback);
+		service.updateBroadcaster_(b, callback);
 	}
 
 	public static final HTML createBambuserEmbed(final String vars, 

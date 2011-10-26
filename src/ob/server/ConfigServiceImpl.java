@@ -30,26 +30,36 @@ public class ConfigServiceImpl extends RemoteServiceServlet
 	// true = live video, false = latest video
 	private static final boolean IS_LIVE = false;
 
-	public static final Dimension[] VIDEO_DIMENSIONS = 
+	public static final Dimension[] VIDEO_DIMENSIONS_LIMITS = 
 		{new Dimension(150, 150), new Dimension(500, 500)};
 
 	public static final String[] MAP_DIMENSIONS = 
-		new String[] {"300px", "300px"};
+		new String[] {"600px", "300px"};
 
 	
 	// Is a poll conducted on the server (devmode) or is it a cron job?
-	public static final boolean IS_SERVER_POLL = true;
+	public static final boolean IS_SERVER_POLL = false;//true;
 
 	// Draw GWT-based video grid or Javascript one?
 	public static final boolean IS_GWT_GRID = false;
 
 	public static final String GRID_NAME = "broadcast_grid";
 
+	public static final boolean GRID_FILLER = true;
+
+	public static final Dimension BROADCAST_WINDOW_DIMENSION = 
+		new Dimension(400, 800);
+
+	public static final boolean IS_OVERLAY_VISIBLE = false;
+
+	public static final int MAX_GRID = 16;
+
 	private static final Config c = 
 		new Config(BOUNDS_KML, API_URL, API_OEMBED_URL, DEFAULT_MAP_CENTRE, 
 				   DEFAULT_MAP_ZOOM, REFRESH_INTERVAL, IS_LIVE, 
-				   VIDEO_DIMENSIONS, MAP_DIMENSIONS, IS_SERVER_POLL,
-				   IS_GWT_GRID, GRID_NAME);
+				   VIDEO_DIMENSIONS_LIMITS, MAP_DIMENSIONS, IS_SERVER_POLL,
+				   IS_GWT_GRID, GRID_NAME, GRID_FILLER, 
+				   BROADCAST_WINDOW_DIMENSION, IS_OVERLAY_VISIBLE, MAX_GRID);
 	
 
 	@Override

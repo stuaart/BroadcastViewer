@@ -1,7 +1,5 @@
 package ob.client;
 
-import ob.shared.FieldVerifier;
-
 import ob.client.overlay.bambuser.Video;
 import ob.client.overlay.bambuser.Result;
 
@@ -39,6 +37,7 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Label;
 
 import com.google.gwt.maps.client.event.MapClickHandler;
 
@@ -125,7 +124,7 @@ public class BroadcastViewer implements EntryPoint
 				@Override
 				public void onFailure(final Throwable t) 
 				{
-					Window.alert("Error getting Config");
+					GWT.log("Error getting Config");
 				}
 				@Override
 				public void onSuccess(final Config config_) 
@@ -133,12 +132,13 @@ public class BroadcastViewer implements EntryPoint
 					config = config_;
 					GWT.log("Retrieved Config");
 					setupUI();
+					setupDebugUI();
 				}
 			};
 		cServ.getConfig(callback);
 
-		GWT.log("Calling initial getAllBroadcasters()");
-		getAllBroadcasters();
+		GWT.log("Calling initial getBroadcasters()");
+		getBroadcasters();
 	}
 
 	private void setupUI()
@@ -146,6 +146,9 @@ public class BroadcastViewer implements EntryPoint
 
 		broadcastPanel = new SimplePanel();
 		RootPanel.get("selected_broadcast").add(broadcastPanel);
+		// TODO: set default text
+		// "Select a Broadcaster from the map or grid"
+		broadcastPanel.setWidget(new Label("Select a Broadcaster"));
 
 		if (config.isGWTGrid())
 		{
@@ -153,49 +156,6 @@ public class BroadcastViewer implements EntryPoint
 			RootPanel.get(config.getGridName()).add(broadcastGrid);
 		}
 
-		final FlowPanel mainPanel = new FlowPanel();
-		final Button addBroadcasters = new Button("[Add Broadcasters]");
-		final Button getExternals = new Button("Get Externals");		
-		final Button popGridE = new Button("Populate Grid - Externals");		
-		mainPanel.add(addBroadcasters);
-		mainPanel.add(getExternals);
-		mainPanel.add(popGridE);
-		RootPanel.get("markers").add(mainPanel);
-
-		addBroadcasters.addClickHandler(new ClickHandler() 
-		{
-			@Override
-      		public void onClick(final ClickEvent event) 
-			{
-			   	populateBroadcasters();
-      		}
-	    });
-		popGridE.addClickHandler(new ClickHandler() 
-		{
-			@Override
-      		public void onClick(final ClickEvent event) 
-			{
-			   	populateBroadcastGrid(markersExt.keySet(), config.isLive());
-      		}
-	    });
-		getExternals.addClickHandler(new ClickHandler() 
-		{
-			@Override
-      		public void onClick(final ClickEvent event) 
-			{
-				if (geoXml != null)
-				{
-					final int span = 
-						(int)Math.ceil(
-							geoXml.getDefaultSpan()
-								  .distanceFrom(LatLng.newInstance(0, 0))
-						);
-					updateExternalBroadcasters(config.isLive(),
-											   geoXml.getDefaultCenter(),
-											   span);
-				}
-      		}
-	    });
 
 		map = new MapWidget(LatLng.newInstance(config.getDefaultMapCentre()[0], 
 											   config.getDefaultMapCentre()[1]),
@@ -237,7 +197,7 @@ public class BroadcastViewer implements EntryPoint
 				if (e != null)
 					msg.append(e.toString());
 
-				Window.alert(msg.toString());
+				GWT.log(msg.toString());
 			}
 
 			@Override
@@ -248,6 +208,7 @@ public class BroadcastViewer implements EntryPoint
 				{
 					geoXml = overlay;
                   	overlayCache = true;
+					geoXml.setVisible(config.isOverlayVisible());
                   	map.addOverlay(geoXml);
 					GWT.log("KML File " + url + "loaded successfully");
 					GWT.log("Default Center=" + geoXml.getDefaultCenter());
@@ -266,7 +227,6 @@ public class BroadcastViewer implements EntryPoint
 	    dock2.addNorth(map, 500);
 
     	RootPanel.get("map").add(dock2);
-		GWT.log("Added Map");
 
 
 		// Refresh the list of Broadcasters and the display Grid
@@ -274,7 +234,7 @@ public class BroadcastViewer implements EntryPoint
 		{
 			public void run()
 			{
-				getAllBroadcasters();
+				getBroadcasters();
 				if (config.isGWTGrid())
 				{
 					broadcastGrid.clear();
@@ -309,27 +269,7 @@ public class BroadcastViewer implements EntryPoint
 	}
 
 
-	private void populateBroadcasters()
-	{
-		final AsyncCallback<Void> callback = new AsyncCallback<Void>()
-		{
-			@Override
-			public void onFailure(final Throwable caught) 
-			{
-				Window.alert("Error populating Broadcasters");
-			}
-
-			@Override
-			public void onSuccess(Void v) 
-			{
-				GWT.log("Populated Broadcasters");
-			}
-		};
-		bServ.addBroadcasters(callback);
-
-	}
-
-	private void getAllBroadcasters()
+	private void getBroadcasters()
 	{
     	final AsyncCallback<Broadcaster[]> callback = 
 			new AsyncCallback<Broadcaster[]>()
@@ -337,7 +277,7 @@ public class BroadcastViewer implements EntryPoint
 				@Override
 				public void onFailure(final Throwable caught) 
 			  	{
-					Window.alert("Error getting Broadcasters");
+					//Window.alert("Error getting Broadcasters");
 		      	}
 
 				@Override
@@ -346,10 +286,12 @@ public class BroadcastViewer implements EntryPoint
 					GWT.log("Getting Broadcaster Markers, received size is " 
 							+ bs.length + ", Broadcaster Marker cache size is " 
 							+ markersInt.size());
+					final Set<String> dregs = markersInt.keySet();
 
 					broadcasters.clear();
 					for (final Broadcaster b : bs)
 					{
+						dregs.remove(b.getBroadcastId());
 						broadcasters.put(b.getBroadcastId(), b);
 						final Marker m = markersInt.get(b.getBroadcastId());
 						if (m == null)
@@ -387,17 +329,14 @@ public class BroadcastViewer implements EntryPoint
 */
 
 					}
-					//TODO do something for deleted Broadcasters
+
+					for (final String d : dregs)
+						markersInt.remove(d);
 					
-					/*for (final String key : broadcasters.keySet())
-					{
-						GWT.log("broadcasters('" + key + "')=" 
-								+ (broadcasters.get(key)).getVideoId());
-					}*/
    				}
 			};
 
-		bServ.getAllBroadcasters(callback);
+		bServ.getBroadcasters_(true, callback);
 	}
 
 	private void updateExternalBroadcasters(final boolean liveOnly,
@@ -469,7 +408,7 @@ public class BroadcastViewer implements EntryPoint
 	private final Dimension scaleVideo(final int scale)
 	{
 		GWT.log("scale = " + scale);
-		final Dimension[] dims = config.getVideoDimensions();
+		final Dimension[] dims = config.getVideoDimensionsLimits();
 		int width = dims[0].getWidth() + scale * 10;
 		int height = dims[0].getHeight() + scale * 10;
 		if (width > dims[1].getWidth())
@@ -747,10 +686,12 @@ public class BroadcastViewer implements EntryPoint
 		final Broadcaster b = broadcasters.get(username);
 		if (b != null && b.getVideoId() != null)
 		{
+			final Dimension d = config.getBroadcastWindowDimension();
 			final HTML embed = 
 					BroadcastViewerHelper
 						.createBambuserEmbed("vid=" + b.getVideoId() 
-											 + "&chat=yes", 300, 300);
+											 + "&chat=yes", d.getWidth(), 
+											 d.getHeight());
 			broadcastPanel.setWidget(embed);
 			GWT.log("showBroadcast() Used cached embed");
 			b.setViews(b.getViews() + 1);
@@ -839,10 +780,12 @@ public class BroadcastViewer implements EntryPoint
 				{
 					GWT.log("Getting video, id=" + vid.getVid() 
 							+ ", username=" + vid.getUsername());
+					final Dimension d = config.getBroadcastWindowDimension();
 					final HTML embed = 
 						BroadcastViewerHelper
 							.createBambuserEmbed("vid=" + vid.getVid()
-												 + "&chat=yes", 300, 300);
+												 + "&chat=yes",  d.getWidth(), 
+												 d.getHeight());
 					broadcastPanel.setWidget(embed);
 					final Broadcaster b = broadcasters.get(vid.getUsername());
 					if (b != null)
@@ -867,5 +810,134 @@ public class BroadcastViewer implements EntryPoint
 
 	}
 
+
+	// ADMIN METHODS
+	private void setupDebugUI()
+	{
+		final FlowPanel mainPanel = new FlowPanel();
+		final Button addBroadcasters = new Button("Add Broadcasters");
+		final Button delBroadcaster = new Button("Remove at random");
+		final Button getExternals = new Button("Get Externals");
+		final Button popGridE = new Button("Populate Grid - Externals");
+
+			
+		mainPanel.add(addBroadcasters);
+		mainPanel.add(delBroadcaster);
+		mainPanel.add(getExternals);
+		mainPanel.add(popGridE);
+
+		addBroadcasters.addClickHandler(new ClickHandler() 
+		{
+			@Override
+      		public void onClick(final ClickEvent event) 
+			{
+			   	addFakeBroadcasters();
+      		}
+	    });
+
+		delBroadcaster.addClickHandler(new ClickHandler()
+		{
+			@Override
+			public void onClick(final ClickEvent event) 
+			{
+			   	delRandomBroadcaster();
+      		}
+	    });
+
+		
+		getExternals.addClickHandler(new ClickHandler() 
+		{
+			@Override
+      		public void onClick(final ClickEvent event) 
+			{
+				if (geoXml != null)
+				{
+					final int span = 
+						(int)Math.ceil(
+							geoXml.getDefaultSpan()
+								  .distanceFrom(LatLng.newInstance(0, 0))
+						);
+					updateExternalBroadcasters(config.isLive(),
+											   geoXml.getDefaultCenter(),
+											   span);
+				}
+      		}
+	    });
+
+		popGridE.addClickHandler(new ClickHandler() 
+		{
+			@Override
+      		public void onClick(final ClickEvent event) 
+			{
+			   	populateBroadcastGrid(markersExt.keySet(), config.isLive());
+      		}
+	    });
+
+		RootPanel.get("debug_panel").add(mainPanel);
+	}
+
+	private void addFakeBroadcasters()
+	{
+		final AsyncCallback<Void> callback = new AsyncCallback<Void>()
+		{
+			@Override
+			public void onFailure(final Throwable caught) 
+			{
+				Window.alert("Error populating Broadcasters");
+			}
+
+			@Override
+			public void onSuccess(Void v) 
+			{
+				GWT.log("Populated Broadcasters");
+			}
+		};
+		bServ.addBroadcasters(callback);
+
+	}
+
+	private void delRandomBroadcaster()
+	{
+		final AsyncCallback<Broadcaster[]> callback = 
+			new AsyncCallback<Broadcaster[]>()
+			{
+				@Override
+				public void onFailure(final Throwable caught) 
+			  	{
+					//Window.alert("Error getting Broadcasters");
+		      	}
+
+				@Override
+				public void onSuccess(final Broadcaster[] bs) 
+				{
+					if (bs.length == 0)
+					{
+						GWT.log("Error deleting anything: no Broadcasters");
+						return;
+					}
+
+					int n = (int)Math.ceil((Math.random() * bs.length)) - 1;
+
+					final AsyncCallback<Void> callback = 
+						new AsyncCallback<Void>()
+					{
+						@Override
+						public void onFailure(final Throwable caught) 
+						{
+							Window.alert("Error deleting Broadcaster");
+						}
+						@Override
+						public void onSuccess(Void v) 
+						{
+							GWT.log("Deleted Broadcaster");
+						}
+					};
+					bServ.deleteBroadcaster(bs[n].getBroadcastId(), callback);
+				}
+			};
+
+		bServ.getBroadcasters_(true, callback);
+
+	}
 
 }

@@ -9,15 +9,17 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("broadcasters")
 public interface BroadcasterService extends RemoteService 
 {
-	ob.client.model.Broadcaster[] getAllBroadcasters();
+	ob.client.model.Broadcaster[] getBroadcasters_(boolean active);
+	ob.client.model.Broadcaster[] getAllBroadcasters_();
 
-	void updateBroadcaster(ob.client.model.Broadcaster b); 
+	void updateBroadcaster_(ob.client.model.Broadcaster b); 
 
 	Oembed getOembed(String videoId);
 
 	void startServerPoll();
 
 
-	// Temporary
+	// Admin use
 	void addBroadcasters();
+	void deleteBroadcaster(String bid);
 }

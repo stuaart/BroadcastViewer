@@ -2,6 +2,8 @@ package ob.server;
 
 import ob.model.Broadcaster;
 
+import com.google.gwt.core.client.GWT;
+
 import java.io.PrintWriter;
 import java.io.IOException;
 
@@ -11,41 +13,83 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class BroadcasterJSON extends HttpServlet
 {
 
+	// TODO: Limit to 9? Permit square / rectangular numbers only
+	// Order by views
+	// Add 'filler' IDs.
+
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
     	throws ServletException, IOException 
 	{
+		final List<Broadcaster> bl_ = 
+			BroadcasterServiceImpl.getBroadcasters(true);
+		final List<Broadcaster> bl = new ArrayList<Broadcaster>();
+		bl.addAll(bl_);
+		Collections.sort(bl);
+
+
     	final PrintWriter out = resp.getWriter();
 		out.println("{\"children\":[");
 		
-		final List<Broadcaster> bl = 
-			BroadcasterServiceImpl.getBroadcasterList();
+		boolean filler = false;
+		int max = bl.size();
+		final double sqrt = Math.sqrt(max);
+		if (sqrt % Math.round(sqrt) != 0 && max % 2 != 0)
+			filler = true;
 
-		for (int i = 0; i < bl.size(); ++i)
+		int t = 0;
+
+		for (int i = 0; i < max; ++i)
 		{
-			out.println("{");
-			out.println("\"children\": [], \"data\": {");
-			out.println("\"$color\": \"#AE5032\",");
-			out.println("\"image\": \"" + bl.get(i).getThumbnailURL() + "\",");
-			out.println("\"$area\": " 
-						+ String.valueOf(50 + 10 * bl.get(i).getViews()) + ",");
-			out.println("\"views\": " 
-						+ String.valueOf(50 + 10 * bl.get(i).getViews()));
-			out.println("},");
-			out.println("\"id\": \"" + bl.get(i).getBroadcastId() + "\",");
-			out.println("\"name\": \"" + bl.get(i).getBroadcastId() + "\"");
-			out.println("}");
-			if (i < bl.size() - 1)
+			out.println(makeEntry(bl.get(i).getThumbnailURL(),
+								  String.valueOf(bl.get(i).getViews()),
+								  String.valueOf(bl.get(i).getViews()),
+								  bl.get(i).getBroadcastId(),
+								  bl.get(i).getBroadcastId())
+			);
+			t += bl.get(i).getViews();
+
+			if (i < max - 1)
 				out.println(",");
+			//else if (filler)
+			//{
+			//	out.println(",");
+			//	final String vs = String.valueOf(t / bl.size());
+			//	out.println(makeEntry(null, vs, vs, "filler", "filler"));
+			//}
 		}
 		out.println("], \"id\": \"overview\",");
 		out.println("\"name\": \"All Broadcasters\"}");
 		out.flush();
 	}
 
+	private final String makeEntry(final String thumbnailURL, 
+								   final String views, final String area, 
+								   final String id, final String name)
+	{
+
+		final StringBuffer s = new StringBuffer();
+		s.append("{");
+		s.append("\"children\": [], \"data\": {");
+		s.append("\"$color\": \"#AE5032\",");
+		if (thumbnailURL == null)
+			s.append("\"image\": null,");
+		else
+			s.append("\"image\": \"" + thumbnailURL + "\",");
+		s.append("\"$area\": " + area + ",");
+		s.append("\"views\": " + views);
+		s.append("},");
+		s.append("\"id\": \"" + id + "\",");
+		s.append("\"name\": \"" + name + "\"");
+		s.append("}");
+
+		return s.toString();
+	}
 }
