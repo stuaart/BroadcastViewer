@@ -2,6 +2,8 @@ package ob.server;
 
 import ob.model.Broadcaster;
 
+import ob.client.model.Config;
+
 import com.google.gwt.core.client.GWT;
 
 import java.io.PrintWriter;
@@ -20,9 +22,7 @@ import java.util.Collections;
 public class BroadcasterJSON extends HttpServlet
 {
 
-	// TODO: Limit to 9? Permit square / rectangular numbers only
-	// Order by views
-	// Add 'filler' IDs.
+	private static final Config config = ConfigServiceImpl.getConfigStatic();
 
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -40,6 +40,9 @@ public class BroadcasterJSON extends HttpServlet
 		
 		boolean filler = false;
 		int max = bl.size();
+		if (max > config.getMaxGrid())
+			max = config.getMaxGrid();
+
 		final double sqrt = Math.sqrt(max);
 		if (sqrt % Math.round(sqrt) != 0 && max % 2 != 0)
 			filler = true;

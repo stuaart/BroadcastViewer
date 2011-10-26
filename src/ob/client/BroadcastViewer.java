@@ -12,6 +12,7 @@ import ob.client.overlay.JSONRequest;
 import ob.client.overlay.JSONRequestHandler;
 
 import java.util.Set;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -148,7 +149,9 @@ public class BroadcastViewer implements EntryPoint
 		RootPanel.get("selected_broadcast").add(broadcastPanel);
 		// TODO: set default text
 		// "Select a Broadcaster from the map or grid"
-		broadcastPanel.setWidget(new Label("Select a Broadcaster"));
+		broadcastPanel.setWidget(
+			new Label("Select a Broadcaster from the map or grid")
+		);
 
 		if (config.isGWTGrid())
 		{
@@ -286,12 +289,12 @@ public class BroadcastViewer implements EntryPoint
 					GWT.log("Getting Broadcaster Markers, received size is " 
 							+ bs.length + ", Broadcaster Marker cache size is " 
 							+ markersInt.size());
-					final Set<String> dregs = markersInt.keySet();
+					final Set<String> dregs = new HashSet<String>();
+					dregs.addAll(markersInt.keySet());
 
 					broadcasters.clear();
 					for (final Broadcaster b : bs)
 					{
-						dregs.remove(b.getBroadcastId());
 						broadcasters.put(b.getBroadcastId(), b);
 						final Marker m = markersInt.get(b.getBroadcastId());
 						if (m == null)
@@ -314,9 +317,7 @@ public class BroadcastViewer implements EntryPoint
 						{
 							m.setLatLng(LatLng.newInstance(b.getLatLng()[0],
 														   b.getLatLng()[1]));
-							//GWT.log("Updated marker for Broadcaster, id=" 
-							//		+ b.getBroadcastId());
-
+							dregs.remove(b.getBroadcastId());
 						}
 
 /*					   	final InfoWindow i = map.getInfoWindow();
@@ -331,7 +332,10 @@ public class BroadcastViewer implements EntryPoint
 					}
 
 					for (final String d : dregs)
+					{
+						map.removeOverlay(markersInt.get(d));
 						markersInt.remove(d);
+					}
 					
    				}
 			};

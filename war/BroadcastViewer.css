@@ -35,7 +35,6 @@ div.outer
 
 div.body
 {
-	color: #fdfdfd;
 	width: 1040px;
 }
 
@@ -59,6 +58,7 @@ div.selected_broadcast
 	padding: 4px;
 	border: 2px solid #f0f0f0;	
 	font-size: 20pt;
+	text-align: center;
 }
 
 div.map
@@ -77,7 +77,7 @@ div.broadcast_grid
 	height: 500px;
 	margin: 4px;
 	padding: 4px;
-
+	text-align: center;
 }
 
 #broadcast_grid 

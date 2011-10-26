@@ -59,6 +59,7 @@ public class BroadcasterServiceImpl extends RemoteServiceServlet
 				em.createQuery("SELECT FROM " 
 				   			   + Broadcaster.class.getName())
 				  .getResultList();
+			// TODO: should be query? See below TODO			
 			if (active)
 			{
 				for (final Broadcaster b : bl_)
